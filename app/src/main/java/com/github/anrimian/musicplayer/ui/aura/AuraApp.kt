@@ -209,7 +209,7 @@ fun AuraApp(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(Modifier.weight(1f)) {
-                    AnimatedVisibility(
+                    this@Row.AnimatedVisibility(
                         visible = currentComposition != null && !orbOpen,
                         enter = fadeIn() + slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it },
                         exit = fadeOut() + slideOutVertically { it }
