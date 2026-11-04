@@ -1,0 +1,155 @@
+name: Build Aura Player APK
+
+on:
+  push:
+    branches: [ "main", "release/**" ]
+    paths-ignore: [ '**.md', '.github/**' ]
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  APP_NAME: AuraPlayer
+
+jobs:
+  build:
+    name: Build Aura Player APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. JDK 17 ─────────────────────────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # ── 3. Gradle cache ───────────────────────────────────────────────────────
+      - name: Restore Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      # ── 4. Signing keystore ───────────────────────────────────────────────────
+      # Uses the permanent key committed at signing/signing-key.jks.
+      # Fallback: SIGNING_KEYSTORE_B64 secret. Never generates a throwaway key,
+      # because that would break updates for everyone on a previous install.
+      - name: Restore signing keystore
+        env:
+          SIGNING_KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
+        run: |
+          mkdir -p signing
+          if [ -f signing/signing-key.jks ]; then
+            echo "Using committed keystore: $(wc -c < signing/signing-key.jks) bytes"
+          elif [ -n "$SIGNING_KEYSTORE_B64" ]; then
+            echo "$SIGNING_KEYSTORE_B64" | base64 -d > signing/signing-key.jks
+            echo "Keystore from secret: $(wc -c < signing/signing-key.jks) bytes"
+          else
+            echo "::error::No permanent signing keystore found (missing signing/signing-key.jks and SIGNING_KEYSTORE_B64 secret). Refusing to generate a throwaway key, that would break updates for existing installs."
+            exit 1
+          fi
+          test -f signing/signing.properties || echo "::warning::signing/signing.properties missing, expecting SIGNING_* env vars"
+
+      # ── 5. chmod gradlew ──────────────────────────────────────────────────────
+      - name: chmod gradlew
+        run: chmod +x ./gradlew
+
+      # ── 6. Auto version bump ──────────────────────────────────────────────────
+      # LITE_VERSION_CODE must stay even (legacy flavor uses code - 1).
+      - name: Bump version
+        run: |
+          BUILD=${{ github.run_number }}
+          CODE=$(( BUILD * 2 + 10 ))
+          VER_NAME="1.0.${BUILD}"
+          F=buildSrc/src/main/kotlin/Constants.kt
+          sed -i "s/const val SYNC_VERSION_NAME = \"[^\"]*\"/const val SYNC_VERSION_NAME = \"${VER_NAME}\"/" $F
+          sed -i "s/const val LITE_VERSION_CODE = [0-9]*/const val LITE_VERSION_CODE = ${CODE}/" $F
+          echo "versionName -> ${VER_NAME}"
+          echo "versionCode -> ${CODE}"
+          grep -n "VERSION_NAME\|VERSION_CODE" $F
+
+      # ── 7. Build release APK ──────────────────────────────────────────────────
+      - name: Assemble Release APK
+        run: |
+          set -o pipefail
+          ./gradlew :app:lite:assembleModernRelease --no-daemon --stacktrace 2>&1 | tee build.log
+
+      # ── 8. Version info ───────────────────────────────────────────────────────
+      - name: Get version info
+        id: version
+        run: |
+          VER="1.0.${{ github.run_number }}"
+          echo "name=$VER" >> $GITHUB_OUTPUT
+          echo "Version: $VER"
+
+      # ── 9. Collect + verify APK ───────────────────────────────────────────────
+      - name: Collect APK
+        run: |
+          VER="${{ steps.version.outputs.name }}"
+          OUTDIR="app/lite/build/outputs/apk/modern/release"
+          mkdir -p dist
+          SRC=$(ls "$OUTDIR"/*.apk | head -1)
+          cp "$SRC" "dist/${APP_NAME}-v${VER}.apk"
+          ls -lh dist
+          # confirm the APK is signed with our permanent key
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs "dist/${APP_NAME}-v${VER}.apk" | head -5
+
+      # ── 10. Upload artifact ───────────────────────────────────────────────────
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: ${{ env.APP_NAME }}-v${{ steps.version.outputs.name }}
+          path: dist/*.apk
+          retention-days: 7
+
+      # ── 11. Upload build log on failure ───────────────────────────────────────
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 3
+
+      # ── 12. GitHub Release ────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.name }}
+          name: "Aura Player v${{ steps.version.outputs.name }}"
+          body: |
+            ## Aura Player v${{ steps.version.outputs.name }}
+
+            **Branch:** `${{ github.ref_name }}` | **Commit:** `${{ github.sha }}`
+
+            ### Download
+            `AuraPlayer-v${{ steps.version.outputs.name }}.apk` works on Android 7.0+ (API 24+).
+
+            ### Install
+            1. Download the APK
+            2. Allow **Install from unknown sources**
+            3. Install and grant the audio/media permission
+          draft: false
+          prerelease: false
+          files: dist/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

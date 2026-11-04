@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--player bottom sheet-->
+    <dimen name="bottom_sheet_expand_height">-1px</dimen><!--match_parent-->
+    <dimen name="panel_title_margin_start">8dp</dimen>
+
+    <!--play queue-->
+    <integer name="play_queue_scroll_window_top_offset">1</integer>
+    <integer name="play_queue_scroll_window_bottom_offset">0</integer>
+
+    <!--modal bottom sheet-->
+    <item name="choose_playlist_dialog_height" type="dimen" format="float">0.7</item>
+
+    <!--snackbar-->
+    <dimen name="snackbar_padding_vertical">8dp</dimen>
+
+    <!--volume popup-->
+    <dimen name="volume_button_vertical_padding">8dp</dimen>
+    <integer name="volume_popup_panel_gravity">16</integer><!--Gravity.CENTER_VERTICAL-->
+
+</resources>

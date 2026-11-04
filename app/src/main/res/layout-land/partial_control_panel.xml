@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:layout_width="match_parent"
+    tools:layout_height="match_parent"
+    tools:background="?attr/playerPanelBackground"
+    tools:layoutDescription="@xml/scene_detailed_music"
+    tools:parentTag="androidx.constraintlayout.motion.widget.MotionLayout">
+
+    <!--prevents seekbar response on outside clicks-->
+    <View
+        android:id="@+id/bgTouchView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:focusable="true"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineCollapsedPanelBottom"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="@dimen/bottom_sheet_height"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineStart"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageView
+        android:id="@+id/ivBottomPanelIndicator"
+        style="@style/ControlPanelIndicatorStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/flCoverWrapper"
+        android:layout_width="@dimen/panel_cover_wrapper_size"
+        android:layout_height="@dimen/panel_cover_wrapper_size"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/tvPlayedTime"
+        app:layout_constraintBottom_toTopOf="@id/groupTime">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            style="@style/ControlPanelCoverStyle"
+            android:id="@+id/ivCover"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="@string/cover"
+            tools:srcCompat="@drawable/ic_music_placeholder" />
+
+    </FrameLayout>
+
+    <com.github.anrimian.musicplayer.ui.common.progress.ProgressView
+        android:id="@+id/pvFileState"
+        android:layout_width="@dimen/file_sync_state_panel_icon_size"
+        android:layout_height="@dimen/file_sync_state_panel_icon_size"
+        android:layout_marginBottom="@dimen/file_sync_state_panel_icon_margin"
+        android:layout_marginEnd="@dimen/file_sync_state_panel_icon_margin"
+        app:layout_constraintBottom_toBottomOf="@id/flCoverWrapper"
+        app:layout_constraintEnd_toEndOf="@id/flCoverWrapper"/>
+
+    <TextView
+        android:id="@+id/tvCurrentComposition"
+        style="@style/TextStyle.Composition.Panel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="@dimen/content_spacing_margin"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintTop_toTopOf="@id/groupTitles"
+        app:layout_constraintBottom_toTopOf="@+id/tvCurrentCompositionArtist"
+        app:layout_constraintEnd_toEndOf="@+id/tvCurrentCompositionArtist"
+        app:layout_constraintStart_toStartOf="@+id/tvCurrentCompositionArtist"
+        tools:text="testtesttststststtst" />
+
+    <TextView
+        android:id="@+id/tvCurrentCompositionArtist"
+        style="@style/TextStyle.Artist.Panel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/panel_title_margin_start"
+        android:layout_marginEnd="@dimen/content_internal_margin"
+        app:layout_constraintTop_toBottomOf="@+id/tvCurrentComposition"
+        app:layout_constraintBottom_toTopOf="@+id/groupTitles"
+        app:layout_constraintEnd_toStartOf="@+id/btnActionsMenu"
+        app:layout_constraintStart_toEndOf="@+id/flCoverWrapper"
+        tools:text="ddddddddddddddddddddd"/>
+
+    <ImageView
+        android:id="@+id/btnActionsMenu"
+        style="@style/ButtonStyle.Menu"
+        android:contentDescription="@string/content_description_menu"
+        android:layout_marginBottom="6dp"
+        app:layout_constraintEnd_toEndOf="@id/guidelineStart"
+        app:layout_constraintBottom_toBottomOf="@+id/tvCurrentCompositionArtist"
+        app:srcCompat="@drawable/ic_dots_vertical" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupTitles"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintVertical_chainStyle="spread"
+        app:constraint_referenced_ids="tvCurrentComposition, tvCurrentCompositionArtist"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/groupTime"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <SeekBar
+        android:id="@+id/sbTrackState"
+        style="@style/PlaybackSeekBarStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintTop_toTopOf="@id/groupTime"
+        app:layout_constraintBottom_toTopOf="@+id/tvPlayedTime"
+        app:layout_constraintEnd_toEndOf="@id/guidelineStart"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/tvPlayedTime"
+        style="@style/TextStyle.Time"
+        android:gravity="center_vertical|start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/sbTrackState"
+        app:layout_constraintBottom_toBottomOf="@id/groupTime"
+        app:layout_constraintStart_toStartOf="@+id/btnRandomMode"
+        tools:text="00:11"/>
+
+    <TextView
+        android:id="@+id/tvVolume"
+        style="@style/TextStyleVolumeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/content_horizontal_margin"
+        app:layout_constraintBottom_toBottomOf="@id/tvPlayedTime"
+        app:layout_constraintStart_toEndOf="@id/tvPlayedTime"
+        app:layout_constraintTop_toTopOf="@id/tvPlayedTime" />
+
+    <TextView
+        android:id="@+id/tvSleepTime"
+        style="@style/TextStyleSleepTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/content_spacing_margin"
+        app:layout_constraintTop_toTopOf="@id/tvPlayedTime"
+        app:layout_constraintBottom_toBottomOf="@id/tvPlayedTime"
+        app:layout_constraintStart_toEndOf="@id/tvVolume"
+        tools:text="00:11" />
+
+    <TextView
+        android:id="@+id/tvPlaybackSpeed"
+        style="@style/TextStyleSpeedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/content_horizontal_margin"
+        app:layout_constraintTop_toTopOf="@id/tvTotalTime"
+        app:layout_constraintBottom_toBottomOf="@id/tvTotalTime"
+        app:layout_constraintEnd_toStartOf="@id/tvTotalTime"/>
+
+    <TextView
+        android:id="@+id/tvTotalTime"
+        style="@style/TextStyle.Time"
+        android:gravity="center_vertical|end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/tvPlayedTime"
+        app:layout_constraintEnd_toEndOf="@+id/btnRepeatMode"
+        tools:text="00:11" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupTime"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="sbTrackState, tvPlayedTime"
+        app:layout_constraintTop_toBottomOf="@id/groupTitles"
+        app:layout_constraintBottom_toTopOf="@+id/btnRandomMode"/>
+
+    <ImageView
+        android:id="@+id/btnRandomMode"
+        style="@style/ButtonStyle"
+        android:contentDescription="@string/content_description_shuffle"
+        android:layout_marginStart="@dimen/content_horizontal_margin"
+        app:layout_constraintTop_toBottomOf="@id/groupTime"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_shuffle"/>
+
+    <ImageView
+        android:id="@+id/ivSkipToPrevious"
+        style="@style/ButtonStyle.Playback.Expanded"
+        android:layout_marginStart="@dimen/content_spacing_margin"
+        app:layout_constraintEnd_toStartOf="@+id/ivPlayPause"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@id/btnRandomMode"
+        app:layout_constraintTop_toTopOf="@+id/ivPlayPause"
+        android:contentDescription="@string/previous_track"
+        app:srcCompat="@drawable/ic_skip_previous" />
+
+    <ImageView
+        android:id="@+id/ivPlayPause"
+        style="@style/ButtonStyle.Playback.Expanded"
+        app:layout_constraintBottom_toBottomOf="@id/btnRandomMode"
+        app:layout_constraintTop_toTopOf="@id/btnRandomMode"
+        app:layout_constraintEnd_toStartOf="@id/ivSkipToNext"
+        app:layout_constraintStart_toEndOf="@id/ivSkipToPrevious"
+        app:srcCompat="@drawable/ic_pause"
+        tools:ignore="ContentDescription" />
+
+    <ImageView
+        android:id="@+id/ivSkipToNext"
+        style="@style/ButtonStyle.Playback.Expanded"
+        android:contentDescription="@string/next_track"
+        android:layout_marginEnd="@dimen/content_spacing_margin"
+        app:layout_constraintEnd_toStartOf="@id/btnRepeatMode"
+        app:layout_constraintStart_toEndOf="@+id/ivPlayPause"
+        app:layout_constraintTop_toTopOf="@+id/ivPlayPause"
+        app:srcCompat="@drawable/ic_skip_next" />
+
+    <ImageView
+        android:id="@+id/btnRepeatMode"
+        style="@style/ButtonStyle"
+        android:contentDescription="@string/content_description_repeat_mode"
+        android:layout_marginEnd="@dimen/content_horizontal_margin"
+        app:layout_constraintBottom_toBottomOf="@id/btnRandomMode"
+        app:layout_constraintEnd_toEndOf="@id/guidelineStart"
+        app:srcCompat="@drawable/ic_repeat" />
+
+    <TextView
+        android:id="@+id/tvError"
+        style="@style/TextStyle.Error.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/content_spacing_margin"
+        android:layout_marginEnd="@dimen/content_spacing_margin"
+        app:layout_constraintBottom_toTopOf="@id/sbTrackState"
+        app:layout_constraintStart_toStartOf="@id/tvPlayedTime"
+        app:layout_constraintEnd_toEndOf="@id/tvTotalTime"
+        app:layout_constrainedWidth="true"/>
+
+</merge>
+

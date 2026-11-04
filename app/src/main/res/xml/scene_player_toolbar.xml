@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Transition
+        android:id="@+id/transition_lyrics_queue"
+        app:constraintSetStart="@+id/lyrics"
+        app:constraintSetEnd="@+id/queue"/>
+
+    <Transition
+        android:id="@+id/transition_now_playing_queue"
+        app:constraintSetStart="@+id/now_playing"
+        app:constraintSetEnd="@+id/queue"/>
+
+    <Transition
+        android:id="@+id/transition_lyrics_now_playing"
+        app:constraintSetStart="@+id/lyrics"
+        app:constraintSetEnd="@+id/now_playing"/>
+
+    <ConstraintSet android:id="@id/lyrics">
+
+        <Constraint
+            android:id="@id/tvQueueTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/toolbar_title_menu_button_size"
+            app:layout_constraintStart_toStartOf="@id/tvLyricsTitle"
+            app:layout_constraintTop_toTopOf="@id/tvLyricsTitle"
+            app:layout_constraintEnd_toStartOf="@id/acvPlayQueue"
+            app:layout_constraintBottom_toBottomOf="@id/tvLyricsTitle"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintHorizontal_bias="0.0"/>
+
+        <Constraint
+            android:id="@id/tvQueueSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/toolbar_title_menu_button_size"
+            app:layout_constraintStart_toStartOf="@id/tvQueueTitle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/acvPlayQueue"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintHorizontal_bias="0.0"/>
+
+        <Constraint
+            android:id="@+id/barrierTitles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="end"
+            app:constraint_referenced_ids="tvLyricsTitle"/>
+
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/now_playing">
+
+        <Constraint
+            android:id="@id/tvQueueTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/toolbar_title_menu_button_size"
+            app:layout_constraintStart_toStartOf="@id/tvNowPlaying"
+            app:layout_constraintTop_toTopOf="@id/tvNowPlaying"
+            app:layout_constraintEnd_toStartOf="@id/acvPlayQueue"
+            app:layout_constraintBottom_toBottomOf="@id/tvNowPlaying"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintHorizontal_bias="0.0"/>
+
+        <Constraint
+            android:id="@id/tvQueueSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/toolbar_title_menu_button_size"
+            app:layout_constraintStart_toStartOf="@id/tvQueueTitle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/acvPlayQueue"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintHorizontal_bias="0.0"/>
+
+        <Constraint
+            android:id="@+id/barrierTitles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="end"
+            app:constraint_referenced_ids="tvNowPlaying"/>
+
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@id/queue">
+
+        <Constraint
+            android:id="@id/tvLyricsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/toolbar_title_menu_button_size"
+            app:layout_constraintStart_toStartOf="@id/tvQueueTitle"
+            app:layout_constraintTop_toTopOf="@id/tvQueueTitle"
+            app:layout_constraintEnd_toStartOf="@id/acvPlayQueue"
+            app:layout_constraintBottom_toBottomOf="@id/tvQueueTitle"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintHorizontal_bias="0.0"/>
+
+        <Constraint
+            android:id="@id/tvNowPlaying"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/toolbar_title_menu_button_size"
+            app:layout_constraintStart_toStartOf="@id/tvQueueTitle"
+            app:layout_constraintTop_toTopOf="@id/tvQueueTitle"
+            app:layout_constraintEnd_toStartOf="@id/acvPlayQueue"
+            app:layout_constraintBottom_toBottomOf="@id/tvQueueTitle"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintHorizontal_bias="0.0"/>
+
+    </ConstraintSet>
+
+</MotionScene>

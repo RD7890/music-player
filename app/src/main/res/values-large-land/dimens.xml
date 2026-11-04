@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--list margins-->
+    <dimen name="list_library_bottom_padding">0dp</dimen>
+
+    <!--toolbar-->
+    <dimen name="toolbar_player_content_start_padding">24dp</dimen>
+
+    <!--play queue-->
+    <integer name="play_queue_scroll_window_top_offset">1</integer>
+    <integer name="play_queue_scroll_window_bottom_offset">0</integer>
+
+    <!--player bottom sheet-->
+    <dimen name="bottom_sheet_expand_height">190dp</dimen>
+
+</resources>

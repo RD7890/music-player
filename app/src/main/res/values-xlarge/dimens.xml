@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--content margins-->
+    <dimen name="content_internal_margin">16dp</dimen>
+    <dimen name="content_horizontal_margin">24dp</dimen>
+    <dimen name="content_vertical_margin">24dp</dimen>
+
+    <!--dialogs-->
+    <item name="dialog_min_width_major" type="dimen">45%</item>
+    <item name="dialog_min_width_minor" type="dimen">72%</item>
+    <item name="popup_dialog_min_width_major" type="dimen">35%</item>
+    <item name="popup_dialog_min_width_minor" type="dimen">52%</item>
+
+    <!--player bottom sheet-->
+    <dimen name="panel_cover_wrapper_size">58dp</dimen>
+    <dimen name="panel_cover_size">56dp</dimen>
+    <dimen name="bottom_sheet_expand_height">210dp</dimen>
+    <dimen name="panel_title_margin_start">16dp</dimen>
+
+</resources>

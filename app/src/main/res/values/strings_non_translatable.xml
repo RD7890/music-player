@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="feedback_email" translatable="false">smusicplayer.feedback@gmail.com</string>
+    <string name="log_email" translatable="false">musicplayer.dummylogs@gmail.com</string>
+    <string name="source_code_link" translatable="false">https://github.com/Anrimian/music-player</string>
+    <string name="patch_notes_link" translatable="false">https://github.com/Anrimian/music-player/releases</string>
+    <string name="crowdin_link" translatable="false">https://crowdin.com/project/s-music-player</string>
+    <string name="google_play" translatable="false">Google Play</string>
+    <string name="main_version" translatable="false">main version</string>
+    <string name="offline_version" translatable="false">offline version</string>
+    <string name="main_app_play_store_link" translatable="false">https://play.google.com/store/apps/details?id=com.github.anrimian.musicplayer</string>
+    <string name="lite_app_play_store_link" translatable="false">https://play.google.com/store/apps/details?id=com.github.anrimian.musicplayer.lite</string>
+
+    <string name="title_external_player" translatable="false">Music Player - Play File</string>
+    <string name="useless_image" translatable="false">Useless image</string>
+
+    <!--strings for rare cases-->
+    <string name="system_media_store_system_error" translatable="false">Android system can\'t find the system media storage. This is very strange and rare issue on android 10. Try to restart app or reboot the device, perhaps it will solve this problem.</string>
+    <string name="playlists_scanning_completed" translatable="false">Playlists scanning completed</string>
+    <string name="go_to_root_folder" translatable="false">Go to root folder</string>
+    <string name="empty_string" translatable="false"/>
+
+    <string name="widget_small_name" translatable="false">3x1: Small</string>
+    <string name="widget_small_ext_name" translatable="false">4x1: Small extended</string>
+    <string name="widget_medium_name" translatable="false">5x1: Medium</string>
+    <string name="playback_speed_template" translatable="false">%.2fx</string>
+    <string name="percent_template" translatable="false">%d%%</string>
+    <string name="path_template" translatable="false">/%s</string>
+
+    <string name="android_media_player" translatable="false">Android media player</string>
+    <string name="exo_media_player" translatable="false">Google exo player</string>
+
+    <string name="about_app_text_write" translatable="false">email</string>
+    <string name="about_app_text_here" translatable="false">email</string>
+    <string name="privacy_policy" translatable="false">Privacy policy</string>
+    <string name="about_app_text_here_link" translatable="false">here</string>
+    <string name="patchnotes" translatable="false">Patch notes</string>
+    <string name="about_app_text_crowdin" translatable="false">join the project on Crowdin</string>
+
+    <string name="percentage_template" translatable="false">%d%%</string>
+    <string name="braces_template" translatable="false">(%d)</string>
+
+    <!--experimental one-->
+    <string name="app_has_no_system_permission_to_start" translatable="false">App has no system permission to start</string>
+
+    <!--tmp-->
+    <string name="now_playing" translatable="false">Now playing</string>
+
+</resources>
