@@ -1,3 +1,8 @@
+# Local scripts, logs and sensitive files
+logs/
+monitor_build.py
+*PAT*.txt
+
 #built application files
 *.apk
 *.ap_
