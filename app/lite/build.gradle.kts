@@ -1,9 +1,11 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kapt)
 }
 
-val signingProps = java.util.Properties().apply {
+val signingProps = Properties().apply {
     val file = rootProject.file("signing/signing.properties")
     if (file.exists()) file.inputStream().use { load(it) }
 }
