@@ -83,6 +83,7 @@ fun AuraApp(
         var searchOpen by rememberSaveable { mutableStateOf(false) }
         var query by rememberSaveable { mutableStateOf("") }
         var detail by remember { mutableStateOf<DetailRef?>(null) }
+        var showSplash by rememberSaveable { mutableStateOf(true) }
 
         val context = LocalContext.current
         var songMenu by remember { mutableStateOf<SongMenu?>(null) }
@@ -463,6 +464,10 @@ fun AuraApp(
                     onDismiss = { deletePlaylist = null }
                 )
             }
+
+            if (showSplash) {
+                AuraSplash(onFinished = { showSplash = false })
+            }
         }
     }
 }
@@ -518,7 +523,16 @@ private fun HomeContent(
                         topPadding = listTop,
                         bottomPadding = listBottom,
                         onPlay = { index -> controller.play(songs, index) },
-                        onLongPress = { index -> onSongMenu(songs[index]) }
+                        onLongPress = { index -> onSongMenu(songs[index]) },
+                        header = {
+                            if (query.isEmpty()) {
+                                SongsHero(
+                                    accent = accent,
+                                    onPlayAll = { controller.play(songs, 0) },
+                                    onShuffle = { controller.shuffleAll(songs) }
+                                )
+                            }
+                        }
                     )
                 }
 

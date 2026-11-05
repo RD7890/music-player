@@ -149,7 +149,8 @@ fun TrackRow(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(22.dp)
+    val shape = RoundedCornerShape(24.dp)
+    val onCard = Color.Black.copy(alpha = 0.85f)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -158,17 +159,16 @@ fun TrackRow(
                 else Modifier.bounceClick(onClick)
             )
             .clip(shape)
-            .background(if (active) accent.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.05f))
-            .border(1.dp, if (active) accent.copy(alpha = 0.55f) else Color.Transparent, shape)
+            .background(if (active) accent else Color.White.copy(alpha = 0.06f))
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AuraCover(item, Modifier.size(54.dp).clip(RoundedCornerShape(16.dp)), px = 160)
+        AuraCover(item, Modifier.size(56.dp).clip(RoundedCornerShape(17.dp)), px = 160)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 text = item.title,
-                color = if (active) Color.White else AuraColors.text,
+                color = if (active) onCard else AuraColors.text,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -176,7 +176,7 @@ fun TrackRow(
             )
             Text(
                 text = item.artist.orEmpty().ifBlank { "Unknown artist" },
-                color = AuraColors.muted,
+                color = if (active) onCard.copy(alpha = 0.65f) else AuraColors.muted,
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -184,7 +184,7 @@ fun TrackRow(
         }
         Spacer(Modifier.width(10.dp))
         if (active) {
-            EqBars(active = playing, color = accent, modifier = Modifier.padding(end = 8.dp))
+            EqBars(active = playing, color = onCard, modifier = Modifier.padding(end = 8.dp))
         } else {
             Text(
                 text = formatTime(item.duration),
@@ -229,7 +229,7 @@ fun TrackList(
                 playing = playing,
                 accent = accent,
                 onClick = { onPlay(index) },
-                modifier = Modifier.animateItem(),
+                modifier = Modifier.animateItem().staggerIn(index),
                 onLongClick = { onLongPress(index) }
             )
         }
@@ -464,5 +464,40 @@ fun PillButton(
         Icon(icon, null, tint = content, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Text(label, color = content, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun SongsHero(accent: Color, onPlayAll: () -> Unit, onShuffle: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        HeroButton("Shuffle all", AuraIcons.Shuffle, accent, Color.Black.copy(alpha = 0.85f), onShuffle, Modifier.weight(1f))
+        HeroButton("Play all", AuraIcons.Play, Color.White.copy(alpha = 0.1f), Color.White, onPlayAll, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun HeroButton(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    container: Color,
+    content: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .height(56.dp)
+            .bounceClick(onClick)
+            .clip(RoundedCornerShape(28.dp))
+            .background(container),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, tint = content, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(label, color = content, fontSize = 15.sp, fontWeight = FontWeight.Bold)
     }
 }

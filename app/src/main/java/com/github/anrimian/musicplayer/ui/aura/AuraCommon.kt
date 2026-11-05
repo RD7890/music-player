@@ -54,6 +54,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -234,6 +235,22 @@ fun Modifier.bounceClick(onClick: () -> Unit): Modifier = composed {
             scaleY = scale
         }
         .clickable(interactionSource = source, indication = null, onClick = onClick)
+}
+
+/** Soft fade + rise for the first rows of a list, so screens feel like they are being laid out. */
+fun Modifier.staggerIn(index: Int): Modifier = composed {
+    val animate = index < 12
+    val progress = remember { Animatable(if (animate) 0f else 1f) }
+    LaunchedEffect(Unit) {
+        if (animate) {
+            delay(120L + index * 40L)
+            progress.animateTo(1f, tween(380, easing = FastOutSlowInEasing))
+        }
+    }
+    this.graphicsLayer {
+        alpha = progress.value
+        translationY = (1f - progress.value) * 48f
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
