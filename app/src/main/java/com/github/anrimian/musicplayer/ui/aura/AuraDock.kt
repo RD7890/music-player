@@ -88,7 +88,7 @@ fun MiniPlayer(
                     onHorizontalDrag = { _, amount -> dragX += amount }
                 )
             }
-            .padding(horizontal = 10.dp),
+            .padding(start = 10.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(Modifier.size(54.dp), contentAlignment = Alignment.Center) {
@@ -124,7 +124,7 @@ fun MiniPlayer(
                 px = 140
             )
         }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 text = composition.title,
@@ -142,7 +142,15 @@ fun MiniPlayer(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(4.dp))
+        RoundIconButton(
+            icon = AuraIcons.SkipBack,
+            onClick = { controller.player.skipToPrevious() },
+            size = 40.dp,
+            iconSize = 20.dp,
+            container = Color.Transparent,
+            description = "Previous"
+        )
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -160,6 +168,14 @@ fun MiniPlayer(
                 )
             }
         }
+        RoundIconButton(
+            icon = AuraIcons.SkipForward,
+            onClick = { controller.player.skipToNext() },
+            size = 40.dp,
+            iconSize = 20.dp,
+            container = Color.Transparent,
+            description = "Next"
+        )
     }
 }
 
@@ -173,27 +189,14 @@ fun OrbNav(
     section: Section,
     accent: Color,
     onToggle: () -> Unit,
-    onSelect: (Section) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val sections = Section.entries
     val glow by animateFloatAsState(
         targetValue = if (open) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow),
         label = "orbGlow"
     )
     Box(modifier = modifier.size(72.dp), contentAlignment = Alignment.Center) {
-        sections.forEachIndexed { index, item ->
-            FanItem(
-                item = item,
-                index = index,
-                count = sections.size,
-                open = open,
-                selected = item == section,
-                accent = accent,
-                onClick = { onSelect(item) }
-            )
-        }
         Box(
             modifier = Modifier
                 .size(72.dp)
@@ -202,7 +205,7 @@ fun OrbNav(
                 }
                 .bounceClick(onToggle)
                 .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(accent, AuraColors.pink)))
+                .background(accent)
                 .border(1.5.dp, Color.White.copy(alpha = 0.25f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -210,12 +213,44 @@ fun OrbNav(
                 Icon(
                     imageVector = if (isOpen) AuraIcons.Close else section.icon,
                     contentDescription = "Navigation",
-                    tint = Color.White,
+                    tint = Color.Black.copy(alpha = 0.85f),
                     modifier = Modifier
                         .size(30.dp)
                         .graphicsLayer { rotationZ = -glow * 90f }
                 )
             }
+        }
+    }
+}
+
+/**
+ * The fanned-out section buttons. Lives in a full-screen overlay (not inside the orb) because
+ * Compose does not deliver touches to children placed outside their parent's bounds.
+ */
+@Composable
+fun OrbFan(
+    open: Boolean,
+    section: Section,
+    accent: Color,
+    originBottom: androidx.compose.ui.unit.Dp,
+    onSelect: (Section) -> Unit,
+) {
+    val sections = Section.entries
+    Box(Modifier.fillMaxSize()) {
+        sections.forEachIndexed { index, item ->
+            FanItem(
+                item = item,
+                index = index,
+                count = sections.size,
+                open = open,
+                selected = item == section,
+                accent = accent,
+                onClick = { onSelect(item) },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = originBottom)
+                    .size(72.dp)
+            )
         }
     }
 }
@@ -229,6 +264,7 @@ private fun FanItem(
     selected: Boolean,
     accent: Color,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val progress = remember { Animatable(0f) }
     LaunchedEffect(open) {
@@ -241,8 +277,8 @@ private fun FanItem(
     // fan from straight up (90 deg) to straight left (180 deg), measured counter-clockwise
     val angle = Math.toRadians(95.0 + index * (80.0 / (count - 1)))
     val radius = 116f
-    Column(
-        modifier = Modifier
+    Box(
+        modifier = modifier
             .offset {
                 val r = radius * progress.value
                 IntOffset(
@@ -256,8 +292,9 @@ private fun FanItem(
                 scaleY = p
                 alpha = progress.value.coerceIn(0f, 1f)
             },
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
+      Column(horizontalAlignment = Alignment.CenterHorizontally) {
         RoundIconButton(
             icon = item.icon,
             onClick = onClick,
@@ -274,5 +311,6 @@ private fun FanItem(
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold
         )
+      }
     }
 }

@@ -1,5 +1,7 @@
 package com.github.anrimian.musicplayer.ui.aura
 
+import android.content.IntentSender
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -41,14 +43,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.anrimian.musicplayer.domain.models.composition.Composition
 import com.github.anrimian.musicplayer.domain.models.composition.CompositionModel
 import com.github.anrimian.musicplayer.domain.models.composition.CurrentComposition
+import com.github.anrimian.musicplayer.data.storage.providers.music.RecoverableSecurityExceptionExt
 import com.github.anrimian.musicplayer.domain.models.playlist.Playlist
+import com.github.anrimian.musicplayer.domain.models.playlist.PlaylistEntry
 
 private class DetailRef(val section: Section, val key: String)
+
+/** A long-pressed song, plus the playlist it was pressed in (if any). */
+private class SongMenu(val song: CompositionModel, val entry: PlaylistEntry?, val playlistId: Long?)
 
 @Composable
 fun AuraApp(
@@ -56,6 +64,7 @@ fun AuraApp(
     openPlayerSignal: Int,
     onSleepTimer: () -> Unit,
     onEqualizer: () -> Unit,
+    onRequestIntent: (IntentSender) -> Unit,
 ) {
     AuraTheme {
         val songs by controller.songs.asState(emptyList<Composition>())
@@ -74,6 +83,32 @@ fun AuraApp(
         var searchOpen by rememberSaveable { mutableStateOf(false) }
         var query by rememberSaveable { mutableStateOf("") }
         var detail by remember { mutableStateOf<DetailRef?>(null) }
+
+        val context = LocalContext.current
+        var songMenu by remember { mutableStateOf<SongMenu?>(null) }
+        var pickerSongs by remember { mutableStateOf<List<CompositionModel>?>(null) }
+        var createPlaylistFor by remember { mutableStateOf<List<CompositionModel>?>(null) }
+        var createPlaylistOpen by remember { mutableStateOf(false) }
+        var renameSong by remember { mutableStateOf<CompositionModel?>(null) }
+        var deleteSong by remember { mutableStateOf<CompositionModel?>(null) }
+        var infoSong by remember { mutableStateOf<CompositionModel?>(null) }
+        var playlistMenu by remember { mutableStateOf<Playlist?>(null) }
+        var renamePlaylist by remember { mutableStateOf<Playlist?>(null) }
+        var deletePlaylist by remember { mutableStateOf<Playlist?>(null) }
+
+        fun toast(message: String) {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+
+        fun onResult(error: Throwable?, done: String?) {
+            when {
+                error == null -> if (done != null) toast(done)
+                error is RecoverableSecurityExceptionExt -> onRequestIntent(error.pIntent.intentSender)
+                error.cause is RecoverableSecurityExceptionExt ->
+                    onRequestIntent((error.cause as RecoverableSecurityExceptionExt).pIntent.intentSender)
+                else -> toast(error.message ?: "Something went wrong")
+            }
+        }
 
         LaunchedEffect(openPlayerSignal) {
             if (openPlayerSignal > 0) playerOpen = true
@@ -105,6 +140,11 @@ fun AuraApp(
         BackHandler(enabled = orbOpen) { orbOpen = false }
         BackHandler(enabled = playerOpen) { playerOpen = false }
         BackHandler(enabled = queueOpen) { queueOpen = false }
+        BackHandler(enabled = songMenu != null || pickerSongs != null || playlistMenu != null) {
+            songMenu = null
+            pickerSongs = null
+            playlistMenu = null
+        }
 
         val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -119,13 +159,7 @@ fun AuraApp(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            0f to accent.copy(alpha = 0.34f),
-                            0.5f to AuraColors.bg,
-                            1f to AuraColors.bg
-                        )
-                    )
+                    .background(screenTint(accent))
             )
 
             AnimatedContent(
@@ -163,6 +197,12 @@ fun AuraApp(
                             searchOpen = !searchOpen
                             if (!searchOpen) query = ""
                         },
+                        onSongMenu = { song -> songMenu = SongMenu(song, null, null) },
+                        onPlaylistMenu = { playlist -> playlistMenu = playlist },
+                        onNewPlaylist = {
+                            createPlaylistFor = null
+                            createPlaylistOpen = true
+                        },
                         onOpenGroup = { group -> detail = DetailRef(section, group.key) },
                         onOpenPlaylist = { playlist -> detail = DetailRef(Section.PLAYLISTS, playlist.id.toString()) }
                     )
@@ -178,6 +218,7 @@ fun AuraApp(
                         top = top,
                         bottom = listBottom,
                         controller = controller,
+                        onSongMenu = { menu -> songMenu = menu },
                         onBack = { detail = null }
                     )
                 }
@@ -200,45 +241,51 @@ fun AuraApp(
                 )
             }
 
-            // dock: mini player pill + orb
-            Row(
+            // dock: orb floats above a full-width mini player
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = bottom + 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalAlignment = Alignment.End
             ) {
-                Box(Modifier.weight(1f)) {
-                    this@Row.AnimatedVisibility(
-                        visible = currentComposition != null && !orbOpen,
-                        enter = fadeIn() + slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it },
-                        exit = fadeOut() + slideOutVertically { it }
-                    ) {
-                        if (currentComposition != null) {
-                            MiniPlayer(
-                                controller = controller,
-                                composition = currentComposition,
-                                isPlaying = isPlaying,
-                                accent = accent,
-                                onOpen = { playerOpen = true }
-                            )
-                        }
+                OrbNav(
+                    open = orbOpen,
+                    section = section,
+                    accent = accent,
+                    onToggle = { orbOpen = !orbOpen }
+                )
+                AnimatedVisibility(
+                    visible = currentComposition != null,
+                    enter = fadeIn() + slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it },
+                    exit = fadeOut() + slideOutVertically { it }
+                ) {
+                    if (currentComposition != null) {
+                        MiniPlayer(
+                            controller = controller,
+                            composition = currentComposition,
+                            isPlaying = isPlaying,
+                            accent = accent,
+                            onOpen = { playerOpen = true },
+                            modifier = Modifier
+                                .padding(top = 12.dp)
+                                .fillMaxWidth()
+                        )
                     }
                 }
-                Box(Modifier.padding(start = 12.dp)) {
-                    OrbNav(
-                        open = orbOpen,
-                        section = section,
-                        accent = accent,
-                        onToggle = { orbOpen = !orbOpen },
-                        onSelect = { picked ->
-                            sectionIndex = picked.ordinal
-                            detail = null
-                            orbOpen = false
-                        }
-                    )
-                }
             }
+
+            OrbFan(
+                open = orbOpen,
+                section = section,
+                accent = accent,
+                originBottom = bottom + 16.dp + (if (currentComposition != null) 84.dp else 0.dp),
+                onSelect = { picked ->
+                    sectionIndex = picked.ordinal
+                    detail = null
+                    orbOpen = false
+                }
+            )
 
             // full player
             AnimatedVisibility(
@@ -256,7 +303,8 @@ fun AuraApp(
                             onClose = { playerOpen = false },
                             onQueue = { queueOpen = true },
                             onSleepTimer = onSleepTimer,
-                            onEqualizer = onEqualizer
+                            onEqualizer = onEqualizer,
+                            onAddToPlaylist = { pickerSongs = listOf(currentComposition) }
                         )
                         AnimatedVisibility(
                             visible = queueOpen,
@@ -265,7 +313,6 @@ fun AuraApp(
                         ) {
                             QueueSheet(
                                 controller = controller,
-                                currentComposition = currentComposition,
                                 isPlaying = isPlaying,
                                 accent = accent,
                                 onClose = { queueOpen = false }
@@ -273,6 +320,148 @@ fun AuraApp(
                         }
                     }
                 }
+            }
+
+            // ---- long-press menus, pickers and dialogs (always on top) ----
+            val menu = songMenu
+            if (menu != null) {
+                val song = menu.song
+                val items = ArrayList<ActionItem>()
+                items.add(ActionItem(AuraIcons.PlayNext, "Play next") {
+                    controller.playNext(listOf(song)) { onResult(it, "Will play next") }
+                })
+                items.add(ActionItem(AuraIcons.Queue, "Add to queue") {
+                    controller.addToQueue(listOf(song)) { onResult(it, "Added to queue") }
+                })
+                items.add(ActionItem(AuraIcons.AddToPlaylist, "Add to playlist") { pickerSongs = listOf(song) })
+                if (menu.entry != null && menu.playlistId != null) {
+                    items.add(ActionItem(AuraIcons.Close, "Remove from playlist") {
+                        controller.removeFromPlaylist(menu.entry, menu.playlistId)
+                    })
+                }
+                items.add(ActionItem(AuraIcons.Rename, "Rename") { renameSong = song })
+                items.add(ActionItem(AuraIcons.Info, "Details") { infoSong = song })
+                items.add(ActionItem(AuraIcons.Delete, "Delete from device", danger = true) { deleteSong = song })
+                ActionSheet(
+                    title = song.title,
+                    subtitle = song.artist.orEmpty().ifBlank { "Unknown artist" },
+                    cover = song,
+                    accent = accent,
+                    items = items,
+                    onDismiss = { songMenu = null }
+                )
+            }
+
+            val picking = pickerSongs
+            if (picking != null) {
+                PlaylistPickerSheet(
+                    playlists = playlists,
+                    accent = accent,
+                    onPick = { playlist ->
+                        controller.addToPlaylist(picking, playlist) { onResult(it, "Added to " + playlist.name) }
+                    },
+                    onCreate = {
+                        createPlaylistFor = picking
+                        createPlaylistOpen = true
+                    },
+                    onDismiss = { pickerSongs = null }
+                )
+            }
+
+            val pMenu = playlistMenu
+            if (pMenu != null) {
+                ActionSheet(
+                    title = pMenu.name,
+                    subtitle = pMenu.compositionsCount.toString() + " songs",
+                    cover = null,
+                    accent = accent,
+                    items = listOf(
+                        ActionItem(AuraIcons.Play, "Play") { controller.playPlaylist(pMenu) },
+                        ActionItem(AuraIcons.Rename, "Rename") { renamePlaylist = pMenu },
+                        ActionItem(AuraIcons.Delete, "Delete playlist", danger = true) { deletePlaylist = pMenu }
+                    ),
+                    onDismiss = { playlistMenu = null }
+                )
+            }
+
+            if (createPlaylistOpen) {
+                TextInputDialog(
+                    title = "New playlist",
+                    label = "Name",
+                    initial = "",
+                    confirmLabel = "Create",
+                    accent = accent,
+                    onConfirm = { name ->
+                        val pending = createPlaylistFor
+                        controller.createPlaylist(name) { created, error ->
+                            if (created != null && pending != null) {
+                                controller.addToPlaylist(pending, created) { onResult(it, "Added to " + created.name) }
+                            } else {
+                                onResult(error, "Playlist created")
+                            }
+                        }
+                    },
+                    onDismiss = {
+                        createPlaylistOpen = false
+                        createPlaylistFor = null
+                    }
+                )
+            }
+
+            val renaming = renameSong
+            if (renaming != null) {
+                RenameSongDialog(
+                    song = renaming,
+                    controller = controller,
+                    accent = accent,
+                    onResult = { onResult(it, "Renamed") },
+                    onDismiss = { renameSong = null }
+                )
+            }
+
+            val deleting = deleteSong
+            if (deleting != null) {
+                ConfirmDialog(
+                    title = "Delete song?",
+                    message = "\"" + deleting.title + "\" will be permanently deleted from your device. " +
+                        "This also removes it from the queue and playlists.",
+                    confirmLabel = "Delete",
+                    danger = true,
+                    accent = accent,
+                    onConfirm = { controller.deleteSongs(listOf(deleting)) { onResult(it, "Deleted") } },
+                    onDismiss = { deleteSong = null }
+                )
+            }
+
+            val info = infoSong
+            if (info != null) {
+                SongInfoDialog(info, accent) { infoSong = null }
+            }
+
+            val renamingPlaylist = renamePlaylist
+            if (renamingPlaylist != null) {
+                TextInputDialog(
+                    title = "Rename playlist",
+                    label = "Name",
+                    initial = renamingPlaylist.name,
+                    confirmLabel = "Save",
+                    accent = accent,
+                    onConfirm = { controller.renamePlaylist(renamingPlaylist, it) },
+                    onDismiss = { renamePlaylist = null }
+                )
+            }
+
+            val deletingPlaylist = deletePlaylist
+            if (deletingPlaylist != null) {
+                ConfirmDialog(
+                    title = "Delete playlist?",
+                    message = "\"" + deletingPlaylist.name + "\" will be deleted. Your songs stay on the device.",
+                    confirmLabel = "Delete",
+                    danger = true,
+                    accent = accent,
+                    onConfirm = { controller.deletePlaylist(deletingPlaylist) },
+                    onDismiss = { deletePlaylist = null }
+                )
             }
         }
     }
@@ -297,6 +486,9 @@ private fun HomeContent(
     controller: AuraController,
     onQuery: (String) -> Unit,
     onToggleSearch: () -> Unit,
+    onSongMenu: (CompositionModel) -> Unit,
+    onPlaylistMenu: (Playlist) -> Unit,
+    onNewPlaylist: () -> Unit,
     onOpenGroup: (TrackGroup) -> Unit,
     onOpenPlaylist: (Playlist) -> Unit,
 ) {
@@ -325,7 +517,8 @@ private fun HomeContent(
                         accent = accent,
                         topPadding = listTop,
                         bottomPadding = listBottom,
-                        onPlay = { index -> controller.play(songs, index) }
+                        onPlay = { index -> controller.play(songs, index) },
+                        onLongPress = { index -> onSongMenu(songs[index]) }
                     )
                 }
 
@@ -336,7 +529,7 @@ private fun HomeContent(
                     ArtistList(artists, listTop, listBottom, onOpenGroup)
 
                 Section.PLAYLISTS -> if (playlists.isEmpty()) EmptyHint("No playlists yet") else
-                    PlaylistList(playlists, listTop, listBottom, onOpenPlaylist)
+                    PlaylistList(playlists, listTop, listBottom, onOpenPlaylist, onPlaylistMenu)
             }
         }
 
@@ -344,14 +537,8 @@ private fun HomeContent(
         Column(
             Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        0f to AuraColors.bg.copy(alpha = 0.94f),
-                        0.8f to AuraColors.bg.copy(alpha = 0.7f),
-                        1f to Color.Transparent
-                    )
-                )
-                .padding(start = 20.dp, end = 20.dp, top = top + 12.dp, bottom = 18.dp)
+                .background(screenTint(accent))
+                .padding(start = 20.dp, end = 20.dp, top = top + 12.dp, bottom = 14.dp)
         ) {
             AnimatedContent(
                 targetState = section,
@@ -365,7 +552,9 @@ private fun HomeContent(
                     query = query,
                     accent = accent,
                     onQuery = onQuery,
-                    onToggleSearch = onToggleSearch
+                    onToggleSearch = onToggleSearch,
+                    actionIcon = if (target == Section.PLAYLISTS) AuraIcons.Add else null,
+                    onAction = onNewPlaylist
                 )
             }
         }
@@ -384,6 +573,7 @@ private fun DetailContent(
     top: androidx.compose.ui.unit.Dp,
     bottom: androidx.compose.ui.unit.Dp,
     controller: AuraController,
+    onSongMenu: (SongMenu) -> Unit,
     onBack: () -> Unit,
 ) {
     var title = ""
@@ -421,6 +611,14 @@ private fun DetailContent(
             topPadding = top + 72.dp,
             bottomPadding = bottom,
             onPlay = { index -> controller.play(tracks, index) },
+            onLongPress = { index ->
+                val item = tracks[index]
+                val playlistId = ref.key.toLongOrNull()
+                onSongMenu(
+                    if (item is PlaylistEntry && ref.section == Section.PLAYLISTS) SongMenu(item, item, playlistId)
+                    else SongMenu(item, null, null)
+                )
+            },
             header = {
                 DetailHeader(
                     title = title,

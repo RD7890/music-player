@@ -10,6 +10,14 @@ import com.adamglin.phosphoricons.fill.SkipBack as FillSkipBack
 import com.adamglin.phosphoricons.fill.SkipForward as FillSkipForward
 import com.adamglin.phosphoricons.regular.ArrowLeft
 import com.adamglin.phosphoricons.regular.CaretDown
+import com.adamglin.phosphoricons.regular.Check
+import com.adamglin.phosphoricons.regular.DotsSixVertical
+import com.adamglin.phosphoricons.regular.Info
+import com.adamglin.phosphoricons.regular.ListPlus
+import com.adamglin.phosphoricons.regular.PencilSimple
+import com.adamglin.phosphoricons.regular.PlayCircle
+import com.adamglin.phosphoricons.regular.Plus
+import com.adamglin.phosphoricons.regular.Trash
 import com.adamglin.phosphoricons.regular.Faders
 import com.adamglin.phosphoricons.regular.Gauge
 import com.adamglin.phosphoricons.regular.ListBullets
@@ -51,4 +59,12 @@ object AuraIcons {
     val Speed: ImageVector get() = PhosphorIcons.Regular.Gauge
     val Orbit: ImageVector get() = PhosphorIcons.Regular.SquaresFour
     val Back: ImageVector get() = PhosphorIcons.Regular.ArrowLeft
+    val Check: ImageVector get() = PhosphorIcons.Regular.Check
+    val DragHandle: ImageVector get() = PhosphorIcons.Regular.DotsSixVertical
+    val Info: ImageVector get() = PhosphorIcons.Regular.Info
+    val AddToPlaylist: ImageVector get() = PhosphorIcons.Regular.ListPlus
+    val Rename: ImageVector get() = PhosphorIcons.Regular.PencilSimple
+    val PlayNext: ImageVector get() = PhosphorIcons.Regular.PlayCircle
+    val Add: ImageVector get() = PhosphorIcons.Regular.Plus
+    val Delete: ImageVector get() = PhosphorIcons.Regular.Trash
 }

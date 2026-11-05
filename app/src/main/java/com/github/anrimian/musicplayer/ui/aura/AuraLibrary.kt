@@ -63,6 +63,8 @@ fun AuraHeader(
     onQuery: (String) -> Unit,
     onToggleSearch: () -> Unit,
     modifier: Modifier = Modifier,
+    actionIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    onAction: () -> Unit = {},
 ) {
     val focus = remember { FocusRequester() }
     LaunchedEffect(searchOpen) {
@@ -84,6 +86,16 @@ fun AuraHeader(
                     letterSpacing = (-0.5).sp,
                 )
                 Text(text = subtitle, color = AuraColors.muted, fontSize = 13.sp)
+            }
+            if (actionIcon != null) {
+                RoundIconButton(
+                    icon = actionIcon,
+                    onClick = onAction,
+                    container = accent,
+                    tint = Color.Black.copy(alpha = 0.85f),
+                    description = "New"
+                )
+                Spacer(Modifier.width(10.dp))
             }
             RoundIconButton(
                 icon = if (searchOpen) AuraIcons.Close else AuraIcons.Search,
@@ -135,12 +147,16 @@ fun TrackRow(
     accent: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(22.dp)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .bounceClick(onClick)
+            .then(
+                if (onLongClick != null) Modifier.bounceCombinedClick(onClick, onLongClick)
+                else Modifier.bounceClick(onClick)
+            )
             .clip(shape)
             .background(if (active) accent.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.05f))
             .border(1.dp, if (active) accent.copy(alpha = 0.55f) else Color.Transparent, shape)
@@ -195,6 +211,7 @@ fun TrackList(
     bottomPadding: Dp,
     onPlay: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    onLongPress: (Int) -> Unit = {},
     header: @Composable () -> Unit = {},
 ) {
     LazyColumn(
@@ -212,7 +229,8 @@ fun TrackList(
                 playing = playing,
                 accent = accent,
                 onClick = { onPlay(index) },
-                modifier = Modifier.animateItem()
+                modifier = Modifier.animateItem(),
+                onLongClick = { onLongPress(index) }
             )
         }
     }
@@ -327,6 +345,7 @@ fun PlaylistList(
     topPadding: Dp,
     bottomPadding: Dp,
     onOpen: (Playlist) -> Unit,
+    onLongPress: (Playlist) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -339,7 +358,7 @@ fun PlaylistList(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .bounceClick { onOpen(playlist) }
+                    .bounceCombinedClick({ onOpen(playlist) }, { onLongPress(playlist) })
                     .clip(RoundedCornerShape(28.dp))
                     .background(Color.White.copy(alpha = 0.05f))
                     .padding(10.dp),
@@ -349,11 +368,7 @@ fun PlaylistList(
                     modifier = Modifier
                         .size(58.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            Brush.linearGradient(
-                                listOf(fallbackAccent(playlist.id), fallbackAccent(playlist.id + 7L))
-                            )
-                        ),
+                        .background(placeholderColor(playlist.id)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(AuraIcons.Playlists, null, tint = Color.White, modifier = Modifier.size(26.dp))

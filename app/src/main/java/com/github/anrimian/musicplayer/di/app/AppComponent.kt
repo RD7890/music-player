@@ -67,6 +67,7 @@ import com.github.anrimian.musicplayer.ui.widgets.WidgetUpdater
 import com.github.anrimian.musicplayer.ui.widgets.menu.WidgetMenuPresenter
 import com.github.anrimian.musicplayer.utils.logger.AppLogger
 import com.github.anrimian.musicplayer.utils.logger.FileLog
+import com.github.anrimian.musicplayer.domain.interactors.editor.EditorInteractor
 import com.github.anrimian.musicplayer.domain.interactors.library.LibraryCompositionsInteractor
 import com.github.anrimian.musicplayer.domain.interactors.playlists.PlaylistsInteractor
 import dagger.Subcomponent
@@ -107,6 +108,7 @@ interface AppComponent {
     fun libraryPlayerInteractor(): LibraryPlayerInteractor
     fun libraryCompositionsInteractor(): LibraryCompositionsInteractor
     fun playlistsInteractor(): PlaylistsInteractor
+    fun auraEditorInteractor(): EditorInteractor
     fun displaySettingsInteractor(): DisplaySettingsInteractor
     fun playerInteractor(): PlayerInteractor
     fun musicServiceInteractor(): MusicServiceInteractor

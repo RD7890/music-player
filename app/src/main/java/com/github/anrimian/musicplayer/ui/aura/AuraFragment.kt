@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import com.github.anrimian.musicplayer.di.Components
+import com.github.anrimian.musicplayer.ui.common.activity.registerIntentSender
 import com.github.anrimian.musicplayer.ui.equalizer.EqualizerDialogFragment
 import com.github.anrimian.musicplayer.ui.sleep_timer.SleepTimerDialogFragment
 import com.github.anrimian.musicplayer.ui.utils.fragments.safeShow
@@ -27,6 +28,9 @@ class AuraFragment : Fragment() {
     }
 
     private val openPlayerSignal = mutableIntStateOf(0)
+
+    // system confirmation dialog for deleting / editing files we do not own (Android 11+)
+    private val intentSender = registerIntentSender { }
     private var previousLightStatusBars: Boolean? = null
 
     fun openPlayer() {
@@ -53,7 +57,8 @@ class AuraFragment : Fragment() {
                     controller = controller,
                     openPlayerSignal = openPlayerSignal.intValue,
                     onSleepTimer = { SleepTimerDialogFragment().safeShow(childFragmentManager) },
-                    onEqualizer = { EqualizerDialogFragment().safeShow(childFragmentManager) }
+                    onEqualizer = { EqualizerDialogFragment().safeShow(childFragmentManager) },
+                    onRequestIntent = { sender -> intentSender.launch(sender) }
                 )
             }
         }

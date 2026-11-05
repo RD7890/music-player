@@ -3,6 +3,7 @@ package com.github.anrimian.musicplayer.ui.aura
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -15,6 +16,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -47,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -69,6 +72,9 @@ import androidx.compose.ui.unit.sp
 import com.github.anrimian.musicplayer.domain.models.composition.CompositionModel
 import com.github.anrimian.musicplayer.domain.models.player.modes.RepeatMode as PlayRepeat
 import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
+import com.github.anrimian.musicplayer.domain.models.play_queue.PlayQueueItem
 import kotlin.math.roundToInt
 
 private val SPEEDS = floatArrayOf(0.75f, 1f, 1.25f, 1.5f, 2f)
@@ -83,6 +89,7 @@ fun PlayerScreen(
     onQueue: () -> Unit,
     onSleepTimer: () -> Unit,
     onEqualizer: () -> Unit,
+    onAddToPlaylist: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -97,7 +104,7 @@ fun PlayerScreen(
         modifier = modifier
             .fillMaxSize()
             .offset { IntOffset(0, dragY.value.roundToInt()) }
-            .background(AuraColors.bg)
+            .background(screenTint(accent, 0.24f))
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragEnd = {
@@ -113,17 +120,11 @@ fun PlayerScreen(
                 )
             }
     ) {
-        // ambient background: accent wash + blurred-looking cover glow
+        // flat background tinted with the cover accent
         Box(
             Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        0f to accent.copy(alpha = 0.55f),
-                        0.5f to accent.copy(alpha = 0.14f),
-                        1f to AuraColors.bg
-                    )
-                )
+                .background(screenTint(accent, 0.24f))
         )
 
         Column(
@@ -180,7 +181,13 @@ fun PlayerScreen(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                EqBars(active = isPlaying, color = accent, modifier = Modifier.padding(start = 12.dp))
+                EqBars(active = isPlaying, color = accent, modifier = Modifier.padding(start = 12.dp, end = 8.dp))
+                RoundIconButton(
+                    icon = AuraIcons.AddToPlaylist,
+                    onClick = onAddToPlaylist,
+                    size = 44.dp,
+                    description = "Add to playlist"
+                )
             }
 
             Spacer(Modifier.height(14.dp))
@@ -314,12 +321,6 @@ private fun VinylCover(
                     scaleX = scale
                     scaleY = scale
                 }
-                .shadow(
-                    elevation = 28.dp,
-                    shape = RoundedCornerShape(40.dp),
-                    ambientColor = accent,
-                    spotColor = accent
-                )
                 .clip(RoundedCornerShape(40.dp)),
             px = 700,
             iconFraction = 0.3f
@@ -338,21 +339,15 @@ private fun PlayButton(isPlaying: Boolean, accent: Color, onClick: () -> Unit) {
         modifier = Modifier
             .size(88.dp)
             .bounceClick(onClick)
-            .shadow(
-                elevation = 18.dp,
-                shape = RoundedCornerShape(corner.dp),
-                ambientColor = accent,
-                spotColor = accent
-            )
             .clip(RoundedCornerShape(corner.dp))
-            .background(Brush.linearGradient(listOf(accent, AuraColors.pink))),
+            .background(accent),
         contentAlignment = Alignment.Center
     ) {
         Crossfade(targetState = isPlaying, animationSpec = tween(200), label = "playIcon") { playing ->
             Icon(
                 imageVector = if (playing) AuraIcons.Pause else AuraIcons.Play,
                 contentDescription = if (playing) "Pause" else "Play",
-                tint = Color.White,
+                tint = Color.Black.copy(alpha = 0.85f),
                 modifier = Modifier.size(38.dp)
             )
         }
@@ -412,13 +407,12 @@ private fun SeekBar(controller: AuraController, duration: Long, accent: Color) {
                 )
                 val w = size.width * fraction
                 drawRoundRect(
-                    brush = Brush.horizontalGradient(listOf(accent, AuraColors.pink)),
+                    color = accent,
                     topLeft = Offset(0f, y - trackH / 2f),
                     size = androidx.compose.ui.geometry.Size(w.coerceAtLeast(trackH), trackH),
                     cornerRadius = radius
                 )
                 val thumbR = if (dragging) 10.dp.toPx() else 7.dp.toPx()
-                drawCircle(accent.copy(alpha = 0.35f), radius = thumbR * 1.9f, center = Offset(w, y))
                 drawCircle(Color.White, radius = thumbR, center = Offset(w, y))
             }
         }
@@ -429,11 +423,10 @@ private fun SeekBar(controller: AuraController, duration: Long, accent: Color) {
     }
 }
 
-/** Up-next sheet that slides over the player. */
+/** Up-next sheet: drag the handle to reorder, tap the cross to remove. */
 @Composable
 fun QueueSheet(
     controller: AuraController,
-    currentComposition: CompositionModel?,
     isPlaying: Boolean,
     accent: Color,
     onClose: () -> Unit,
@@ -442,12 +435,29 @@ fun QueueSheet(
     val queue by controller.queue.asState(emptyList())
     val event by controller.queueEvent.asState(com.github.anrimian.musicplayer.domain.models.play_queue.PlayQueueEvent(null))
     val currentItemId = event.playQueueItem?.itemId
+    val local = remember { mutableStateListOf<PlayQueueItem>() }
+    var confirmClear by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    LaunchedEffect(queue.size, currentItemId) {
-        val index = queue.indexOfFirst { it.itemId == currentItemId }
+    // follow the database when items are added or removed; pure reorders are already applied locally
+    LaunchedEffect(queue) {
+        val localIds = local.map { it.itemId }
+        val newIds = queue.map { it.itemId }
+        if (localIds.size != newIds.size || localIds.toSet() != newIds.toSet()) {
+            local.clear()
+            local.addAll(queue)
+        }
+    }
+    LaunchedEffect(local.size, currentItemId) {
+        val index = local.indexOfFirst { it.itemId == currentItemId }
         if (index >= 0) listState.scrollToItem((index - 1).coerceAtLeast(0))
+    }
+
+    val reorderable = rememberReorderableLazyListState(listState) { from, to ->
+        val snapshot = local.toList()
+        local.add(to.index, local.removeAt(from.index))
+        controller.moveQueueItem(snapshot, from.index, to.index)
     }
 
     val shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp)
@@ -457,7 +467,6 @@ fun QueueSheet(
             .padding(top = 90.dp)
             .clip(shape)
             .background(Color(0xFF12121C))
-            .border(1.dp, Color.White.copy(alpha = 0.08f), shape)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 16.dp, top = 18.dp, bottom = 8.dp),
@@ -465,7 +474,10 @@ fun QueueSheet(
         ) {
             Column(Modifier.weight(1f)) {
                 Text("Up next", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                Text(queue.size.toString() + " in queue", color = AuraColors.muted, fontSize = 12.sp)
+                Text(local.size.toString() + " in queue · drag to reorder", color = AuraColors.muted, fontSize = 12.sp)
+            }
+            if (local.isNotEmpty()) {
+                DialogButton("Clear", accent, false) { confirmClear = true }
             }
             RoundIconButton(AuraIcons.Close, onClose, description = "Close queue")
         }
@@ -477,16 +489,107 @@ fun QueueSheet(
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(queue, key = { _, item -> item.itemId }) { _, item ->
-                val active = item.itemId == currentItemId
-                TrackRow(
-                    item = item,
-                    active = active,
-                    playing = isPlaying,
-                    accent = accent,
-                    onClick = { controller.player.skipToItem(item.itemId) }
-                )
+            itemsIndexed(local, key = { _, item -> item.itemId }) { _, item ->
+                ReorderableItem(reorderable, key = item.itemId) { isDragging ->
+                    val elevation by animateDpAsState(if (isDragging) 10.dp else 0.dp, label = "dragElevation")
+                    QueueRow(
+                        item = item,
+                        active = item.itemId == currentItemId,
+                        playing = isPlaying,
+                        accent = accent,
+                        dragging = isDragging,
+                        handle = Modifier.draggableHandle(),
+                        onClick = { controller.player.skipToItem(item.itemId) },
+                        onRemove = { controller.removeFromQueue(item) },
+                        modifier = Modifier.shadow(elevation, RoundedCornerShape(22.dp))
+                    )
+                }
             }
+        }
+    }
+
+    if (confirmClear) {
+        ConfirmDialog(
+            title = "Clear queue?",
+            message = "Playback will stop and the queue will be emptied.",
+            confirmLabel = "Clear",
+            danger = true,
+            accent = accent,
+            onConfirm = { controller.clearQueue() },
+            onDismiss = { confirmClear = false }
+        )
+    }
+}
+
+@Composable
+private fun QueueRow(
+    item: PlayQueueItem,
+    active: Boolean,
+    playing: Boolean,
+    accent: Color,
+    dragging: Boolean,
+    handle: Modifier,
+    onClick: () -> Unit,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(22.dp)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(
+                when {
+                    dragging -> Color(0xFF2A2A3D)
+                    active -> accent.copy(alpha = 0.2f)
+                    else -> Color.White.copy(alpha = 0.06f)
+                }
+            )
+            .clickable(onClick = onClick)
+            .padding(start = 10.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AuraCover(item, Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)), px = 140)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = item.artist.orEmpty().ifBlank { "Unknown artist" },
+                color = AuraColors.muted,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        if (active) {
+            EqBars(active = playing, color = accent, modifier = Modifier.padding(horizontal = 8.dp))
+        }
+        RoundIconButton(
+            icon = AuraIcons.Close,
+            onClick = onRemove,
+            size = 36.dp,
+            iconSize = 18.dp,
+            container = Color.Transparent,
+            tint = AuraColors.muted,
+            description = "Remove from queue"
+        )
+        Box(
+            modifier = handle.size(40.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = AuraIcons.DragHandle,
+                contentDescription = "Drag to reorder",
+                tint = AuraColors.muted,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }

@@ -13,7 +13,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -44,6 +46,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -116,6 +121,16 @@ fun fallbackAccent(id: Long?): Color {
     return Color.hsv(hue, 0.62f, 0.92f)
 }
 
+/** Flat, muted tile color used while a cover is missing or loading. */
+fun placeholderColor(id: Long?): Color {
+    val raw = (((id ?: 0L) * 47L) % 360L).toFloat()
+    val hue = if (raw < 0f) raw + 360f else raw
+    return Color.hsv(hue, 0.45f, 0.5f)
+}
+
+/** Screen background: the dark base color tinted with the current accent, flat. */
+fun screenTint(accent: Color, amount: Float = 0.17f): Color = lerp(AuraColors.bg, accent, amount)
+
 private fun dominantColor(bmp: Bitmap): Color? {
     return try {
         var r = 0.0
@@ -184,11 +199,7 @@ fun AuraCover(
 ) {
     val seed = composition?.id
     Box(
-        modifier = modifier.background(
-            Brush.linearGradient(
-                listOf(fallbackAccent(seed), fallbackAccent((seed ?: 0L) + 5L))
-            )
-        ),
+        modifier = modifier.background(placeholderColor(seed)),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -223,6 +234,32 @@ fun Modifier.bounceClick(onClick: () -> Unit): Modifier = composed {
             scaleY = scale
         }
         .clickable(interactionSource = source, indication = null, onClick = onClick)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+fun Modifier.bounceCombinedClick(onClick: () -> Unit, onLongClick: () -> Unit): Modifier = composed {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val haptics = LocalHapticFeedback.current
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium),
+        label = "pressLong"
+    )
+    this
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }
+        .combinedClickable(
+            interactionSource = source,
+            indication = null,
+            onClick = onClick,
+            onLongClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                onLongClick()
+            }
+        )
 }
 
 @Composable
