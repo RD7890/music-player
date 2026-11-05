@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Android 12+ system splash: flat violet with the vinyl logo, handed over to the in-app reveal. -->
+    <!-- Android 12+ system splash: just the dark colour (blank icon); the in-app splash takes over from there. -->
     <style name="AppTheme.VersionSpecific" parent="AppTheme.NightModeSpecific">
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/aura_splash_bg</item>
         <item name="android:windowSplashScreenBackground">@color/aura_splash_bg</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/aura_splash_blank</item>
     </style>
 </resources>

@@ -160,12 +160,14 @@ class AuraController(component: AppComponent) {
 }
 
 enum class Section(val title: String) {
+    HOME("Home"),
     SONGS("Songs"),
     ALBUMS("Albums"),
     ARTISTS("Artists"),
     PLAYLISTS("Playlists");
 
     val icon get() = when (this) {
+        HOME -> AuraIcons.Home
         SONGS -> AuraIcons.Songs
         ALBUMS -> AuraIcons.Albums
         ARTISTS -> AuraIcons.Artists

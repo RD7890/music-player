@@ -34,10 +34,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.hypot
 
-private val SplashBg = Color(0xFF5B4BFF)
-private val SplashDisc = Color(0xFF1B1633)
-private val SplashGroove = Color(0xFF3A3260)
-private val SplashLabel = Color(0xFFFF5C7A)
+private val SplashDark = Color(0xFF0E0E10)
+private val SplashBg = Color(0xFFD6F36B)
+private val SplashDisc = Color(0xFF141414)
+private val SplashGroove = Color(0xFF2E2E2E)
+private val SplashLabel = Color(0xFFFF9166)
 
 /**
  * Cold-start splash: the vinyl logo spins in on flat violet, then a circular hole grows from the
@@ -45,12 +46,16 @@ private val SplashLabel = Color(0xFFFF5C7A)
  */
 @Composable
 fun AuraSplash(onFinished: () -> Unit) {
-    val logoScale = remember { Animatable(0.82f) }
+    val flood = remember { Animatable(0f) }
+    val logoScale = remember { Animatable(0f) }
     val spin = remember { Animatable(0f) }
     val textAlpha = remember { Animatable(0f) }
     val reveal = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
+        // dark (same as the system launch window) -> splash colour floods in from the centre
+        delay(120)
+        flood.animateTo(1f, tween(480, easing = FastOutSlowInEasing))
         coroutineScope {
             launch { logoScale.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessLow)) }
             launch { spin.animateTo(360f, tween(1000, easing = FastOutSlowInEasing)) }
@@ -76,7 +81,11 @@ fun AuraSplash(onFinished: () -> Unit) {
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
         ) {
             val c = center
-            drawRect(SplashBg)
+            val maxR = hypot(size.width, size.height) / 2f * 1.05f
+            drawRect(SplashDark)
+            if (flood.value > 0f) {
+                drawCircle(SplashBg, radius = maxR * flood.value, center = c)
+            }
 
             val r = 72.dp.toPx() * logoScale.value
             withTransform({ rotate(spin.value, c) }) {
@@ -100,7 +109,6 @@ fun AuraSplash(onFinished: () -> Unit) {
             }
 
             // the reveal: a transparent circle growing from the record label
-            val maxR = hypot(size.width, size.height) / 2f * 1.05f
             val hole = r * 0.35f + (maxR - r * 0.35f) * reveal.value
             if (reveal.value > 0f) {
                 drawCircle(Color.Black, radius = hole, center = c, blendMode = BlendMode.Clear)
@@ -108,7 +116,7 @@ fun AuraSplash(onFinished: () -> Unit) {
         }
         Text(
             text = "Aura",
-            color = Color.White,
+            color = SplashDisc,
             fontSize = 30.sp,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 4.sp,

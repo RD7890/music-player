@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -53,89 +54,148 @@ import com.github.anrimian.musicplayer.domain.models.composition.CompositionMode
 import com.github.anrimian.musicplayer.domain.models.playlist.Playlist
 import com.github.anrimian.musicplayer.domain.models.playlist.PlaylistEntry
 
+/** Big editorial title with a count chip, followed by an always-visible search pill. */
 @Composable
-fun AuraHeader(
+fun ScreenHeader(
+    eyebrow: String,
     title: String,
-    subtitle: String,
-    searchOpen: Boolean,
+    chip: String,
+    placeholder: String,
     query: String,
     accent: Color,
     onQuery: (String) -> Unit,
-    onToggleSearch: () -> Unit,
+    focusRequest: Boolean,
+    onFocusHandled: () -> Unit,
     modifier: Modifier = Modifier,
-    actionIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-    onAction: () -> Unit = {},
 ) {
     val focus = remember { FocusRequester() }
-    LaunchedEffect(searchOpen) {
-        if (searchOpen) {
+    LaunchedEffect(focusRequest) {
+        if (focusRequest) {
             try {
                 focus.requestFocus()
             } catch (ignored: Exception) {
             }
+            onFocusHandled()
         }
     }
-    Column(modifier = modifier.fillMaxWidth().animateContentSize()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = modifier.fillMaxWidth().padding(top = 8.dp, bottom = 6.dp)) {
+        Row(verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
+                Text(
+                    text = eyebrow.uppercase(),
+                    color = accent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp
+                )
                 Text(
                     text = title,
                     color = Color.White,
-                    fontSize = 34.sp,
+                    fontSize = 42.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-0.5).sp,
+                    letterSpacing = (-1).sp
                 )
-                Text(text = subtitle, color = AuraColors.muted, fontSize = 13.sp)
             }
-            if (actionIcon != null) {
-                RoundIconButton(
-                    icon = actionIcon,
-                    onClick = onAction,
-                    container = accent,
-                    tint = Color.Black.copy(alpha = 0.85f),
-                    description = "New"
-                )
-                Spacer(Modifier.width(10.dp))
-            }
-            RoundIconButton(
-                icon = if (searchOpen) AuraIcons.Close else AuraIcons.Search,
-                onClick = onToggleSearch,
-                description = "Search"
-            )
-        }
-        AnimatedVisibility(
-            visible = searchOpen,
-            enter = fadeIn() + slideInVertically { -it / 2 },
-            exit = fadeOut()
-        ) {
-            Row(
+            Box(
                 modifier = Modifier
-                    .padding(top = 14.dp)
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .clip(RoundedCornerShape(26.dp))
-                    .background(Color.White.copy(alpha = 0.08f))
-                    .border(1.dp, accent.copy(alpha = 0.5f), RoundedCornerShape(26.dp))
-                    .padding(horizontal = 18.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(bottom = 10.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(accent)
+                    .padding(horizontal = 14.dp, vertical = 7.dp)
             ) {
-                Icon(AuraIcons.Search, null, tint = AuraColors.muted, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(10.dp))
-                Box(Modifier.weight(1f)) {
-                    if (query.isEmpty()) {
-                        Text("Search your music", color = AuraColors.muted, fontSize = 16.sp)
-                    }
-                    BasicTextField(
-                        value = query,
-                        onValueChange = onQuery,
-                        singleLine = true,
-                        textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                        cursorBrush = SolidColor(accent),
-                        modifier = Modifier.fillMaxWidth().focusRequester(focus)
-                    )
-                }
+                Text(chip, color = Color.Black.copy(alpha = 0.85f), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
+        Spacer(Modifier.height(16.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color.White.copy(alpha = 0.07f))
+                .padding(start = 18.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(AuraIcons.Search, null, tint = AuraColors.muted, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Box(Modifier.weight(1f)) {
+                if (query.isEmpty()) {
+                    Text(placeholder, color = AuraColors.muted, fontSize = 16.sp)
+                }
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQuery,
+                    singleLine = true,
+                    textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
+                    cursorBrush = SolidColor(accent),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus)
+                )
+            }
+            if (query.isNotEmpty()) {
+                RoundIconButton(
+                    icon = AuraIcons.Close,
+                    onClick = { onQuery("") },
+                    size = 40.dp,
+                    iconSize = 18.dp,
+                    container = Color.White.copy(alpha = 0.1f),
+                    description = "Clear"
+                )
+            }
+        }
+    }
+}
+
+/** Home variant: greeting + a two-line question, and a search pill that jumps to the songs screen. */
+@Composable
+fun HomeHeader(
+    greeting: String,
+    accent: Color,
+    onSearch: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth().padding(top = 8.dp, bottom = 6.dp)) {
+        Text(
+            text = greeting.uppercase(),
+            color = accent,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 2.sp
+        )
+        Text(
+            text = "What's the\nmood today?",
+            color = Color.White,
+            fontSize = 40.sp,
+            lineHeight = 42.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = (-1).sp
+        )
+        Spacer(Modifier.height(16.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .bounceClick(onSearch)
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color.White.copy(alpha = 0.07f))
+                .padding(horizontal = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(AuraIcons.Search, null, tint = AuraColors.muted, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Search your music", color = AuraColors.muted, fontSize = 16.sp)
+        }
+    }
+}
+
+@Composable
+fun EmptyScreen(topPadding: Dp, text: String, header: @Composable () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(start = 16.dp, end = 16.dp, top = topPadding)
+    ) {
+        header()
+        EmptyHint(text)
     }
 }
 
@@ -281,6 +341,7 @@ fun AlbumGrid(
     topPadding: Dp,
     bottomPadding: Dp,
     onOpen: (TrackGroup) -> Unit,
+    header: @Composable () -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -291,6 +352,7 @@ fun AlbumGrid(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
+        item(span = { GridItemSpan(maxLineSpan) }) { header() }
         gridItems(groups, key = { it.key }) { group ->
             GroupCard(group, onClick = { onOpen(group) })
         }
@@ -303,6 +365,7 @@ fun ArtistList(
     topPadding: Dp,
     bottomPadding: Dp,
     onOpen: (TrackGroup) -> Unit,
+    header: @Composable () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -311,6 +374,7 @@ fun ArtistList(
         ),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        item(key = "header") { header() }
         itemsIndexed(groups, key = { _, g -> g.key }) { _, group ->
             Row(
                 modifier = Modifier
@@ -346,6 +410,7 @@ fun PlaylistList(
     bottomPadding: Dp,
     onOpen: (Playlist) -> Unit,
     onLongPress: (Playlist) -> Unit,
+    header: @Composable () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -354,6 +419,7 @@ fun PlaylistList(
         ),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        item(key = "header") { header() }
         itemsIndexed(playlists, key = { _, p -> p.id }) { _, playlist ->
             Row(
                 modifier = Modifier

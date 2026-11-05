@@ -55,8 +55,8 @@ import androidx.compose.ui.window.Dialog
 import com.github.anrimian.musicplayer.domain.models.composition.CompositionModel
 import com.github.anrimian.musicplayer.domain.models.playlist.Playlist
 
-private val SheetColor = Color(0xFF181825)
-private val DialogColor = Color(0xFF1C1C2B)
+private val SheetColor = Color(0xFF151518)
+private val DialogColor = Color(0xFF1B1B1F)
 private val DangerColor = Color(0xFFFF6B6B)
 
 class ActionItem(

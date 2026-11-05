@@ -75,7 +75,7 @@ fun MiniPlayer(
             .height(72.dp)
             .bounceClick(onOpen)
             .clip(shape)
-            .background(Color(0xFF181826).copy(alpha = 0.95f))
+            .background(AuraColors.card)
             .border(1.dp, Color.White.copy(alpha = 0.08f), shape)
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(
@@ -275,8 +275,8 @@ private fun FanItem(
         )
     }
     // fan from straight up (90 deg) to straight left (180 deg), measured counter-clockwise
-    val angle = Math.toRadians(95.0 + index * (80.0 / (count - 1)))
-    val radius = 116f
+    val angle = Math.toRadians(92.0 + index * (86.0 / (count - 1)))
+    val radius = 150f
     Box(
         modifier = modifier
             .offset {
@@ -298,9 +298,9 @@ private fun FanItem(
         RoundIconButton(
             icon = item.icon,
             onClick = onClick,
-            size = 54.dp,
-            iconSize = 26.dp,
-            container = if (selected) accent else Color(0xFF232336),
+            size = 50.dp,
+            iconSize = 24.dp,
+            container = if (selected) accent else Color(0xFF26262B),
             tint = if (selected) Color.Black.copy(alpha = 0.85f) else Color.White,
             description = item.title
         )

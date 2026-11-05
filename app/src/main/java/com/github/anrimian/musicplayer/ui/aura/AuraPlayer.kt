@@ -292,7 +292,7 @@ private fun VinylCover(
                 .graphicsLayer { rotationZ = spin.value }
         ) {
             val r = this.size.minDimension / 2f
-            drawCircle(Color(0xFF0C0C12), radius = r)
+            drawCircle(Color(0xFF0C0C0E), radius = r)
             for (i in 1..6) {
                 drawCircle(
                     color = Color.White.copy(alpha = 0.05f),
@@ -309,7 +309,7 @@ private fun VinylCover(
                 size = this.size
             )
             drawCircle(accent, radius = r * 0.3f)
-            drawCircle(Color(0xFF0C0C12), radius = r * 0.05f)
+            drawCircle(Color(0xFF0C0C0E), radius = r * 0.05f)
         }
         // the cover
         AuraCover(
@@ -466,7 +466,7 @@ fun QueueSheet(
             .fillMaxSize()
             .padding(top = 90.dp)
             .clip(shape)
-            .background(Color(0xFF12121C))
+            .background(Color(0xFF131316))
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 16.dp, top = 18.dp, bottom = 8.dp),
@@ -540,7 +540,7 @@ private fun QueueRow(
             .clip(shape)
             .background(
                 when {
-                    dragging -> Color(0xFF2A2A3D)
+                    dragging -> Color(0xFF2A2A30)
                     active -> accent.copy(alpha = 0.2f)
                     else -> Color.White.copy(alpha = 0.06f)
                 }

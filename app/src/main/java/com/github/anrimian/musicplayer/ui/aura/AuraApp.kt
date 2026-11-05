@@ -23,6 +23,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -80,7 +82,7 @@ fun AuraApp(
         var orbOpen by remember { mutableStateOf(false) }
         var playerOpen by rememberSaveable { mutableStateOf(false) }
         var queueOpen by remember { mutableStateOf(false) }
-        var searchOpen by rememberSaveable { mutableStateOf(false) }
+        var focusSearch by remember { mutableStateOf(false) }
         var query by rememberSaveable { mutableStateOf("") }
         var detail by remember { mutableStateOf<DetailRef?>(null) }
         var showSplash by rememberSaveable { mutableStateOf(true) }
@@ -137,6 +139,10 @@ fun AuraApp(
             if (q.isEmpty()) playlists else playlists.filter { it.name.contains(q, true) }
         }
 
+        BackHandler(enabled = section != Section.HOME) {
+            sectionIndex = Section.HOME.ordinal
+            query = ""
+        }
         BackHandler(enabled = detail != null) { detail = null }
         BackHandler(enabled = orbOpen) { orbOpen = false }
         BackHandler(enabled = playerOpen) { playerOpen = false }
@@ -149,7 +155,7 @@ fun AuraApp(
 
         val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-        val listTop = top + 128.dp + if (searchOpen) 66.dp else 0.dp
+        val listTop = top + 12.dp
         val listBottom = bottom + 124.dp
 
         Box(
@@ -180,24 +186,33 @@ fun AuraApp(
                     HomeContent(
                         section = section,
                         songs = filteredSongs,
+                        allSongs = songs,
                         albums = filteredAlbums,
                         artists = filteredArtists,
                         playlists = filteredPlaylists,
-                        totalSongs = songs.size,
-                        currentId = currentComposition?.id,
+                        albumCount = albums.size,
+                        artistCount = artists.size,
+                        playlistCount = playlists.size,
+                        current = currentComposition,
                         isPlaying = isPlaying,
                         accent = accent,
-                        searchOpen = searchOpen,
                         query = query,
-                        top = top,
+                        focusSearch = focusSearch,
                         listTop = listTop,
                         listBottom = listBottom,
                         controller = controller,
                         onQuery = { query = it },
-                        onToggleSearch = {
-                            searchOpen = !searchOpen
-                            if (!searchOpen) query = ""
+                        onFocusHandled = { focusSearch = false },
+                        onSearchFromHome = {
+                            focusSearch = true
+                            query = ""
+                            sectionIndex = Section.SONGS.ordinal
                         },
+                        onOpenSection = { target ->
+                            query = ""
+                            sectionIndex = target.ordinal
+                        },
+                        onOpenPlayer = { playerOpen = true },
                         onSongMenu = { song -> songMenu = SongMenu(song, null, null) },
                         onPlaylistMenu = { playlist -> playlistMenu = playlist },
                         onNewPlaylist = {
@@ -283,6 +298,7 @@ fun AuraApp(
                 originBottom = bottom + 16.dp + (if (currentComposition != null) 84.dp else 0.dp),
                 onSelect = { picked ->
                     sectionIndex = picked.ordinal
+                    query = ""
                     detail = null
                     orbOpen = false
                 }
@@ -476,100 +492,137 @@ fun AuraApp(
 private fun HomeContent(
     section: Section,
     songs: List<Composition>,
+    allSongs: List<Composition>,
     albums: List<TrackGroup>,
     artists: List<TrackGroup>,
     playlists: List<Playlist>,
-    totalSongs: Int,
-    currentId: Long?,
+    albumCount: Int,
+    artistCount: Int,
+    playlistCount: Int,
+    current: CompositionModel?,
     isPlaying: Boolean,
     accent: Color,
-    searchOpen: Boolean,
     query: String,
-    top: androidx.compose.ui.unit.Dp,
+    focusSearch: Boolean,
     listTop: androidx.compose.ui.unit.Dp,
     listBottom: androidx.compose.ui.unit.Dp,
     controller: AuraController,
     onQuery: (String) -> Unit,
-    onToggleSearch: () -> Unit,
+    onFocusHandled: () -> Unit,
+    onSearchFromHome: () -> Unit,
+    onOpenSection: (Section) -> Unit,
+    onOpenPlayer: () -> Unit,
     onSongMenu: (CompositionModel) -> Unit,
     onPlaylistMenu: (Playlist) -> Unit,
     onNewPlaylist: () -> Unit,
     onOpenGroup: (TrackGroup) -> Unit,
     onOpenPlaylist: (Playlist) -> Unit,
 ) {
-    val subtitle = when (section) {
-        Section.SONGS -> totalSongs.toString() + " songs in your library"
-        Section.ALBUMS -> albums.size.toString() + " albums"
-        Section.ARTISTS -> artists.size.toString() + " artists"
-        Section.PLAYLISTS -> playlists.size.toString() + " playlists"
+    val currentId = current?.id
+    val greeting = remember {
+        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        when {
+            hour < 5 -> "Late night"
+            hour < 12 -> "Good morning"
+            hour < 18 -> "Good afternoon"
+            else -> "Good evening"
+        }
     }
-    Box(Modifier.fillMaxSize()) {
-        AnimatedContent(
-            targetState = section,
-            transitionSpec = {
-                (fadeIn(tween(320)) + slideInVertically(tween(320)) { it / 14 }) togetherWith fadeOut(tween(160))
-            },
-            label = "section"
-        ) { target ->
+
+    AnimatedContent(
+        targetState = section,
+        transitionSpec = {
+            (fadeIn(tween(320)) + slideInVertically(tween(320)) { it / 14 }) togetherWith fadeOut(tween(160))
+        },
+        label = "section"
+    ) { target ->
+        val header: @Composable () -> Unit = {
             when (target) {
-                Section.SONGS -> if (songs.isEmpty()) {
-                    EmptyHint(if (query.isEmpty()) "No songs found yet" else "Nothing matches your search")
-                } else {
-                    TrackList(
-                        tracks = songs,
-                        currentId = currentId,
-                        playing = isPlaying,
-                        accent = accent,
-                        topPadding = listTop,
-                        bottomPadding = listBottom,
-                        onPlay = { index -> controller.play(songs, index) },
-                        onLongPress = { index -> onSongMenu(songs[index]) },
-                        header = {
-                            if (query.isEmpty()) {
-                                SongsHero(
-                                    accent = accent,
-                                    onPlayAll = { controller.play(songs, 0) },
-                                    onShuffle = { controller.shuffleAll(songs) }
-                                )
-                            }
+                Section.HOME -> HomeHeader(greeting, accent, onSearchFromHome)
+                else -> {
+                    val chip = when (target) {
+                        Section.SONGS -> allSongs.size.toString() + " songs"
+                        Section.ALBUMS -> albumCount.toString() + " albums"
+                        Section.ARTISTS -> artistCount.toString() + " artists"
+                        else -> playlistCount.toString() + " playlists"
+                    }
+                    Column {
+                        ScreenHeader(
+                            eyebrow = "Library",
+                            title = target.title,
+                            chip = chip,
+                            placeholder = "Search " + target.title.lowercase(),
+                            query = query,
+                            accent = accent,
+                            onQuery = onQuery,
+                            focusRequest = focusSearch && target == Section.SONGS,
+                            onFocusHandled = onFocusHandled
+                        )
+                        if (target == Section.SONGS && query.isEmpty()) {
+                            Spacer(Modifier.height(12.dp))
+                            SongsHero(
+                                accent = accent,
+                                onPlayAll = { controller.play(allSongs, 0) },
+                                onShuffle = { controller.shuffleAll(allSongs) }
+                            )
                         }
-                    )
+                        if (target == Section.PLAYLISTS) {
+                            Spacer(Modifier.height(12.dp))
+                            PillButton("New playlist", AuraIcons.Add, accent, Color.Black.copy(alpha = 0.85f), onNewPlaylist)
+                        }
+                    }
                 }
-
-                Section.ALBUMS -> if (albums.isEmpty()) EmptyHint("No albums") else
-                    AlbumGrid(albums, listTop, listBottom, onOpenGroup)
-
-                Section.ARTISTS -> if (artists.isEmpty()) EmptyHint("No artists") else
-                    ArtistList(artists, listTop, listBottom, onOpenGroup)
-
-                Section.PLAYLISTS -> if (playlists.isEmpty()) EmptyHint("No playlists yet") else
-                    PlaylistList(playlists, listTop, listBottom, onOpenPlaylist, onPlaylistMenu)
             }
         }
+        when (target) {
+            Section.HOME -> HomeScreen(
+                songs = allSongs,
+                albumCount = albumCount,
+                artistCount = artistCount,
+                playlistCount = playlistCount,
+                current = current,
+                isPlaying = isPlaying,
+                accent = accent,
+                topPadding = listTop,
+                bottomPadding = listBottom,
+                controller = controller,
+                header = header,
+                onOpenSection = onOpenSection,
+                onOpenPlayer = onOpenPlayer
+            )
 
-        // header floats above the list on a soft fade so content scrolls underneath
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .background(screenTint(accent))
-                .padding(start = 20.dp, end = 20.dp, top = top + 12.dp, bottom = 14.dp)
-        ) {
-            AnimatedContent(
-                targetState = section,
-                transitionSpec = { fadeIn(tween(250)) togetherWith fadeOut(tween(150)) },
-                label = "title"
-            ) { target ->
-                AuraHeader(
-                    title = target.title,
-                    subtitle = subtitle,
-                    searchOpen = searchOpen,
-                    query = query,
+            Section.SONGS -> if (songs.isEmpty()) {
+                EmptyScreen(listTop, if (query.isEmpty()) "No songs found yet" else "Nothing matches your search", header)
+            } else {
+                TrackList(
+                    tracks = songs,
+                    currentId = currentId,
+                    playing = isPlaying,
                     accent = accent,
-                    onQuery = onQuery,
-                    onToggleSearch = onToggleSearch,
-                    actionIcon = if (target == Section.PLAYLISTS) AuraIcons.Add else null,
-                    onAction = onNewPlaylist
+                    topPadding = listTop,
+                    bottomPadding = listBottom,
+                    onPlay = { index -> controller.play(songs, index) },
+                    onLongPress = { index -> onSongMenu(songs[index]) },
+                    header = header
                 )
+            }
+
+            Section.ALBUMS -> if (albums.isEmpty()) {
+                EmptyScreen(listTop, "No albums", header)
+            } else {
+                AlbumGrid(albums, listTop, listBottom, onOpenGroup, header)
+            }
+
+            Section.ARTISTS -> if (artists.isEmpty()) {
+                EmptyScreen(listTop, "No artists", header)
+            } else {
+                ArtistList(artists, listTop, listBottom, onOpenGroup, header)
+            }
+
+            Section.PLAYLISTS -> if (playlists.isEmpty()) {
+                EmptyScreen(listTop, "No playlists yet", header)
+            } else {
+                PlaylistList(playlists, listTop, listBottom, onOpenPlaylist, onPlaylistMenu, header)
             }
         }
     }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Same as the library theme, plus a window background that matches the in-app splash. -->
+    <!-- Same as the library theme, plus a window background that is the same dark colour the in-app splash starts with. -->
     <style name="AppTheme.VersionSpecific" parent="AppTheme.NightModeSpecific">
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/aura_splash_bg</item>

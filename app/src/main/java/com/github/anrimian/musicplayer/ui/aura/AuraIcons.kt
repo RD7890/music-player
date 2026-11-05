@@ -12,6 +12,7 @@ import com.adamglin.phosphoricons.regular.ArrowLeft
 import com.adamglin.phosphoricons.regular.CaretDown
 import com.adamglin.phosphoricons.regular.Check
 import com.adamglin.phosphoricons.regular.DotsSixVertical
+import com.adamglin.phosphoricons.regular.House
 import com.adamglin.phosphoricons.regular.Info
 import com.adamglin.phosphoricons.regular.ListPlus
 import com.adamglin.phosphoricons.regular.PencilSimple
@@ -59,6 +60,7 @@ object AuraIcons {
     val Speed: ImageVector get() = PhosphorIcons.Regular.Gauge
     val Orbit: ImageVector get() = PhosphorIcons.Regular.SquaresFour
     val Back: ImageVector get() = PhosphorIcons.Regular.ArrowLeft
+    val Home: ImageVector get() = PhosphorIcons.Regular.House
     val Check: ImageVector get() = PhosphorIcons.Regular.Check
     val DragHandle: ImageVector get() = PhosphorIcons.Regular.DotsSixVertical
     val Info: ImageVector get() = PhosphorIcons.Regular.Info

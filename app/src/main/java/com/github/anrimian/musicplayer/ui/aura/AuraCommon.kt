@@ -65,19 +65,25 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 
 object AuraColors {
-    val bg = Color(0xFF0A0A12)
-    val card = Color(0xFF151522)
-    val text = Color(0xFFF4F4FA)
-    val muted = Color(0xFF9D9DB8)
-    val violet = Color(0xFF7C5CFF)
-    val pink = Color(0xFFFF5C93)
+    val bg = Color(0xFF0E0E10)
+    val card = Color(0xFF18181B)
+    val text = Color(0xFFF4F2EC)
+    val muted = Color(0xFF8C8A85)
+
+    // flat tile palette: lime is the brand color, the rest colour the home tiles
+    val brand = Color(0xFFD6F36B)
+    val orange = Color(0xFFFF9166)
+    val butter = Color(0xFFFFD86B)
+    val mint = Color(0xFF7FE3C0)
+    val cream = Color(0xFFEDE7DA)
+    val ink = Color(0xFF141414)
 }
 
 @Composable
 fun AuraTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = darkColorScheme(
-            primary = AuraColors.violet,
+            primary = AuraColors.brand,
             background = AuraColors.bg,
             surface = AuraColors.card,
             onSurface = AuraColors.text,
