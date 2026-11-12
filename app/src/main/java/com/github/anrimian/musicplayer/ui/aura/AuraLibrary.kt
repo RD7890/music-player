@@ -210,7 +210,7 @@ fun TrackRow(
     onLongClick: (() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(24.dp)
-    val onCard = Color.Black.copy(alpha = 0.85f)
+    val onCard = Color.White
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -218,8 +218,7 @@ fun TrackRow(
                 if (onLongClick != null) Modifier.bounceCombinedClick(onClick, onLongClick)
                 else Modifier.bounceClick(onClick)
             )
-            .clip(shape)
-            .background(if (active) accent else Color.White.copy(alpha = 0.06f))
+            .then(if (active) Modifier.glassFill(shape, accent, 0.9f, 0.6f) else Modifier.glass(shape, strength = 0.75f))
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -236,7 +235,7 @@ fun TrackRow(
             )
             Text(
                 text = item.artist.orEmpty().ifBlank { "Unknown artist" },
-                color = if (active) onCard.copy(alpha = 0.65f) else AuraColors.muted,
+                color = if (active) onCard.copy(alpha = 0.75f) else AuraColors.muted,
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -308,7 +307,7 @@ fun GroupCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectSquare()
-                .clip(RoundedCornerShape(30.dp)),
+                .glass(RoundedCornerShape(30.dp), strength = 0.4f),
             px = 400,
             iconFraction = 0.3f
         )
@@ -380,8 +379,7 @@ fun ArtistList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .bounceClick { onOpen(group) }
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
+                    .glass(RoundedCornerShape(28.dp), strength = 0.75f)
                     .padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -425,16 +423,14 @@ fun PlaylistList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .bounceCombinedClick({ onOpen(playlist) }, { onLongPress(playlist) })
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
+                    .glass(RoundedCornerShape(28.dp), strength = 0.75f)
                     .padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
                         .size(58.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(placeholderColor(playlist.id)),
+                        .glassFill(RoundedCornerShape(20.dp), AuraColors.red, 0.75f, 0.45f),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(AuraIcons.Playlists, null, tint = Color.White, modifier = Modifier.size(26.dp))
@@ -488,7 +484,7 @@ fun DetailHeader(
     ) {
         AuraCover(
             composition = cover,
-            modifier = Modifier.size(190.dp).clip(RoundedCornerShape(44.dp)),
+            modifier = Modifier.size(190.dp).glass(RoundedCornerShape(44.dp), strength = 0.4f),
             px = 500,
             iconFraction = 0.35f
         )
@@ -522,8 +518,7 @@ fun PillButton(
     Row(
         modifier = Modifier
             .bounceClick(onClick)
-            .clip(RoundedCornerShape(26.dp))
-            .background(container)
+            .glassFor(RoundedCornerShape(26.dp), container)
             .padding(horizontal = 22.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -557,8 +552,7 @@ private fun HeroButton(
         modifier = modifier
             .height(56.dp)
             .bounceClick(onClick)
-            .clip(RoundedCornerShape(28.dp))
-            .background(container),
+            .glassFor(RoundedCornerShape(28.dp), container),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {

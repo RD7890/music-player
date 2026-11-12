@@ -34,11 +34,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.hypot
 
-private val SplashDark = Color(0xFF0E0E10)
-private val SplashBg = Color(0xFFD6F36B)
-private val SplashDisc = Color(0xFF141414)
+private val SplashDark = Color(0xFF000000)
+private val SplashBg = Color(0xFFFF2541)
+private val SplashDisc = Color(0xFF000000)
 private val SplashGroove = Color(0xFF2E2E2E)
-private val SplashLabel = Color(0xFFFF9166)
+private val SplashLabel = Color(0xFFFFFFFF)
 
 /**
  * Cold-start splash: the vinyl logo spins in on flat violet, then a circular hole grows from the

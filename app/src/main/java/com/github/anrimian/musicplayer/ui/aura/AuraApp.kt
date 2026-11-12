@@ -75,7 +75,7 @@ fun AuraApp(
         val currentComposition = current.composition
         val isPlaying = current.isPlaying
 
-        val accent by animateColorAsState(rememberAccent(currentComposition), tween(700), label = "accent")
+        val accent = AuraColors.red
 
         var sectionIndex by rememberSaveable { mutableIntStateOf(0) }
         val section = Section.entries[sectionIndex]
@@ -155,7 +155,7 @@ fun AuraApp(
 
         val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-        val listTop = top + 12.dp
+        val listTop = top + 12.dp + HEADER_HEIGHT + 12.dp
         val listBottom = bottom + 124.dp
 
         Box(
@@ -163,11 +163,7 @@ fun AuraApp(
                 .fillMaxSize()
                 .background(AuraColors.bg)
         ) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(screenTint(accent))
-            )
+            AuraBackdrop()
 
             AnimatedContent(
                 targetState = detail,
@@ -199,6 +195,7 @@ fun AuraApp(
                         query = query,
                         focusSearch = focusSearch,
                         listTop = listTop,
+                        headerTop = top + 12.dp,
                         listBottom = listBottom,
                         controller = controller,
                         onQuery = { query = it },
@@ -231,7 +228,8 @@ fun AuraApp(
                         currentId = currentComposition?.id,
                         isPlaying = isPlaying,
                         accent = accent,
-                        top = top,
+                        top = listTop,
+                        headerTop = top + 12.dp,
                         bottom = listBottom,
                         controller = controller,
                         onSongMenu = { menu -> songMenu = menu },
@@ -305,10 +303,9 @@ fun AuraApp(
             )
 
             // full player
-            AnimatedVisibility(
+            PlayerReveal(
                 visible = playerOpen && currentComposition != null,
-                enter = slideInVertically(spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)) { it } + fadeIn(),
-                exit = slideOutVertically(tween(300)) { it } + fadeOut(tween(220))
+                bottomInset = bottom
             ) {
                 if (currentComposition != null) {
                     Box(Modifier.fillMaxSize()) {
@@ -505,6 +502,7 @@ private fun HomeContent(
     query: String,
     focusSearch: Boolean,
     listTop: androidx.compose.ui.unit.Dp,
+    headerTop: androidx.compose.ui.unit.Dp,
     listBottom: androidx.compose.ui.unit.Dp,
     controller: AuraController,
     onQuery: (String) -> Unit,
@@ -529,6 +527,7 @@ private fun HomeContent(
         }
     }
 
+    Box(Modifier.fillMaxSize()) {
     AnimatedContent(
         targetState = section,
         transitionSpec = {
@@ -536,41 +535,18 @@ private fun HomeContent(
         },
         label = "section"
     ) { target ->
+        // the title/search live in the floating header; only the extra buttons scroll with the list
         val header: @Composable () -> Unit = {
-            when (target) {
-                Section.HOME -> HomeHeader(greeting, accent, onSearchFromHome)
-                else -> {
-                    val chip = when (target) {
-                        Section.SONGS -> allSongs.size.toString() + " songs"
-                        Section.ALBUMS -> albumCount.toString() + " albums"
-                        Section.ARTISTS -> artistCount.toString() + " artists"
-                        else -> playlistCount.toString() + " playlists"
-                    }
-                    Column {
-                        ScreenHeader(
-                            eyebrow = "Library",
-                            title = target.title,
-                            chip = chip,
-                            placeholder = "Search " + target.title.lowercase(),
-                            query = query,
-                            accent = accent,
-                            onQuery = onQuery,
-                            focusRequest = focusSearch && target == Section.SONGS,
-                            onFocusHandled = onFocusHandled
-                        )
-                        if (target == Section.SONGS && query.isEmpty()) {
-                            Spacer(Modifier.height(12.dp))
-                            SongsHero(
-                                accent = accent,
-                                onPlayAll = { controller.play(allSongs, 0) },
-                                onShuffle = { controller.shuffleAll(allSongs) }
-                            )
-                        }
-                        if (target == Section.PLAYLISTS) {
-                            Spacer(Modifier.height(12.dp))
-                            PillButton("New playlist", AuraIcons.Add, accent, Color.Black.copy(alpha = 0.85f), onNewPlaylist)
-                        }
-                    }
+            Column {
+                if (target == Section.SONGS && query.isEmpty()) {
+                    SongsHero(
+                        accent = accent,
+                        onPlayAll = { controller.play(allSongs, 0) },
+                        onShuffle = { controller.shuffleAll(allSongs) }
+                    )
+                }
+                if (target == Section.PLAYLISTS) {
+                    PillButton("New playlist", AuraIcons.Add, accent, Color.Black.copy(alpha = 0.85f), onNewPlaylist)
                 }
             }
         }
@@ -586,7 +562,6 @@ private fun HomeContent(
                 topPadding = listTop,
                 bottomPadding = listBottom,
                 controller = controller,
-                header = header,
                 onOpenSection = onOpenSection,
                 onOpenPlayer = onOpenPlayer
             )
@@ -626,6 +601,27 @@ private fun HomeContent(
             }
         }
     }
+    val subtitle = when (section) {
+        Section.HOME -> "What's the mood today?"
+        Section.SONGS -> allSongs.size.toString() + " songs"
+        Section.ALBUMS -> albumCount.toString() + " albums"
+        Section.ARTISTS -> artistCount.toString() + " artists"
+        Section.PLAYLISTS -> playlistCount.toString() + " playlists"
+    }
+    FloatingHeader(
+        icon = section.icon,
+        title = if (section == Section.HOME) greeting else section.title,
+        subtitle = subtitle,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = headerTop),
+        onSearch = if (section == Section.HOME) onSearchFromHome else null,
+        query = query,
+        onQuery = if (section == Section.HOME) null else onQuery,
+        placeholder = "Search " + section.title.lowercase(),
+        focusRequest = focusSearch && section == Section.SONGS,
+        onFocusHandled = onFocusHandled,
+        resetKey = section
+    )
+    }
 }
 
 @Composable
@@ -638,6 +634,7 @@ private fun DetailContent(
     isPlaying: Boolean,
     accent: Color,
     top: androidx.compose.ui.unit.Dp,
+    headerTop: androidx.compose.ui.unit.Dp,
     bottom: androidx.compose.ui.unit.Dp,
     controller: AuraController,
     onSongMenu: (SongMenu) -> Unit,
@@ -675,7 +672,7 @@ private fun DetailContent(
             currentId = currentId,
             playing = isPlaying,
             accent = accent,
-            topPadding = top + 72.dp,
+            topPadding = top,
             bottomPadding = bottom,
             onPlay = { index -> controller.play(tracks, index) },
             onLongPress = { index ->
@@ -697,13 +694,12 @@ private fun DetailContent(
                 )
             }
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = top + 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RoundIconButton(AuraIcons.Back, onBack, description = "Back")
-        }
+        FloatingHeader(
+            icon = ref.section.icon,
+            title = title,
+            subtitle = subtitle,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = headerTop),
+            onBack = onBack
+        )
     }
 }

@@ -1,7 +1,5 @@
 package com.github.anrimian.musicplayer.ui.aura
 
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -51,32 +49,27 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.github.anrimian.musicplayer.domain.models.composition.CompositionModel
-import com.github.anrimian.musicplayer.ui.common.images.glide.GlideApp
 import com.github.anrimian.musicplayer.ui.common.images.models.CompositionImage
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 
 object AuraColors {
-    val bg = Color(0xFF0E0E10)
-    val card = Color(0xFF18181B)
-    val text = Color(0xFFF4F2EC)
-    val muted = Color(0xFF8C8A85)
+    // fixed palette: red, white and black only. Nothing here changes with the playing song.
+    val red = Color(0xFFFF2541)
+    val bg = Color(0xFF000000)
+    val card = Color(0xFF141012)
+    val tile = Color(0xFF241A1D)
+    val text = Color(0xFFFFFFFF)
+    val muted = Color(0xFFA39A9C)
 
-    // flat tile palette: lime is the brand color, the rest colour the home tiles
-    val brand = Color(0xFFD6F36B)
-    val orange = Color(0xFFFF9166)
-    val butter = Color(0xFFFFD86B)
-    val mint = Color(0xFF7FE3C0)
-    val cream = Color(0xFFEDE7DA)
-    val ink = Color(0xFF141414)
+    val brand = red
+    val white = Color(0xFFFFFFFF)
+    val ink = Color(0xFF000000)
 }
 
 @Composable
@@ -122,80 +115,11 @@ fun formatTime(ms: Long): String {
     return minutes.toString() + ":" + seconds.toString().padStart(2, '0')
 }
 
-fun fallbackAccent(id: Long?): Color {
-    val raw = (((id ?: 0L) * 47L) % 360L).toFloat()
-    val hue = if (raw < 0f) raw + 360f else raw
-    return Color.hsv(hue, 0.62f, 0.92f)
-}
+/** Flat tile color used while a cover is missing or loading. Same for every song. */
+fun placeholderColor(id: Long?): Color = AuraColors.tile
 
-/** Flat, muted tile color used while a cover is missing or loading. */
-fun placeholderColor(id: Long?): Color {
-    val raw = (((id ?: 0L) * 47L) % 360L).toFloat()
-    val hue = if (raw < 0f) raw + 360f else raw
-    return Color.hsv(hue, 0.45f, 0.5f)
-}
-
-/** Screen background: the dark base color tinted with the current accent, flat. */
+/** Screen background: black base with a fixed red tint, flat. Change [amount] to make it more or less red. */
 fun screenTint(accent: Color, amount: Float = 0.17f): Color = lerp(AuraColors.bg, accent, amount)
-
-private fun dominantColor(bmp: Bitmap): Color? {
-    return try {
-        var r = 0.0
-        var g = 0.0
-        var b = 0.0
-        var weightSum = 0.0
-        val hsv = FloatArray(3)
-        for (y in 0 until bmp.height step 2) {
-            for (x in 0 until bmp.width step 2) {
-                val px = bmp.getPixel(x, y)
-                android.graphics.Color.colorToHSV(px, hsv)
-                val w = (hsv[1] * hsv[2]).toDouble() + 0.05
-                r += android.graphics.Color.red(px) * w
-                g += android.graphics.Color.green(px) * w
-                b += android.graphics.Color.blue(px) * w
-                weightSum += w
-            }
-        }
-        if (weightSum <= 0.0) return null
-        val avg = android.graphics.Color.rgb(
-            (r / weightSum).toInt().coerceIn(0, 255),
-            (g / weightSum).toInt().coerceIn(0, 255),
-            (b / weightSum).toInt().coerceIn(0, 255)
-        )
-        android.graphics.Color.colorToHSV(avg, hsv)
-        hsv[1] = hsv[1].coerceIn(0.45f, 0.9f)
-        hsv[2] = hsv[2].coerceIn(0.6f, 0.95f)
-        Color(android.graphics.Color.HSVToColor(hsv))
-    } catch (e: Exception) {
-        null
-    }
-}
-
-/** Accent color taken from the current cover, falls back to a stable hue per track. */
-@Composable
-fun rememberAccent(composition: CompositionModel?): Color {
-    val context = LocalContext.current
-    val id = composition?.id
-    val coverTime = composition?.coverModifyTime
-    val color = remember { mutableStateOf(fallbackAccent(id)) }
-    DisposableEffect(id, coverTime) {
-        color.value = fallbackAccent(id)
-        if (composition == null) {
-            onDispose { }
-        } else {
-            val target = object : CustomTarget<Bitmap>(32, 32) {
-                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    dominantColor(resource)?.let { color.value = it }
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) {}
-            }
-            GlideApp.with(context).asBitmap().load(composition.coverModel()).into(target)
-            onDispose { GlideApp.with(context).clear(target) }
-        }
-    }
-    return color.value
-}
 
 @Composable
 fun AuraCover(
@@ -300,8 +224,7 @@ fun RoundIconButton(
         modifier = modifier
             .size(size)
             .bounceClick(onClick)
-            .clip(CircleShape)
-            .background(container),
+            .glassFor(CircleShape, container),
         contentAlignment = Alignment.Center
     ) {
         Icon(

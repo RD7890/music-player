@@ -74,9 +74,7 @@ fun MiniPlayer(
         modifier = modifier
             .height(72.dp)
             .bounceClick(onOpen)
-            .clip(shape)
-            .background(AuraColors.card)
-            .border(1.dp, Color.White.copy(alpha = 0.08f), shape)
+            .glass(shape, base = Color.Black.copy(alpha = 0.55f))
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(
                     onDragEnd = {
@@ -155,8 +153,7 @@ fun MiniPlayer(
             modifier = Modifier
                 .size(48.dp)
                 .bounceClick { controller.player.playOrPause() }
-                .clip(CircleShape)
-                .background(accent),
+                .glassFill(CircleShape, accent),
             contentAlignment = Alignment.Center
         ) {
             Crossfade(targetState = isPlaying, animationSpec = tween(180), label = "miniPlay") { playing ->
@@ -204,9 +201,7 @@ fun OrbNav(
                     rotationZ = glow * 90f
                 }
                 .bounceClick(onToggle)
-                .clip(CircleShape)
-                .background(accent)
-                .border(1.5.dp, Color.White.copy(alpha = 0.25f), CircleShape),
+                .glassFill(CircleShape, accent),
             contentAlignment = Alignment.Center
         ) {
             Crossfade(targetState = open, animationSpec = tween(200), label = "orbIcon") { isOpen ->
@@ -300,7 +295,7 @@ private fun FanItem(
             onClick = onClick,
             size = 50.dp,
             iconSize = 24.dp,
-            container = if (selected) accent else Color(0xFF26262B),
+            container = if (selected) accent else Color.White.copy(alpha = 0.1f),
             tint = if (selected) Color.Black.copy(alpha = 0.85f) else Color.White,
             description = item.title
         )

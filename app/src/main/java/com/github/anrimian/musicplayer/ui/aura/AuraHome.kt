@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.sp
 import com.github.anrimian.musicplayer.domain.models.composition.Composition
 import com.github.anrimian.musicplayer.domain.models.composition.CompositionModel
 
-private val Ink = Color(0xFF141414)
+private val Ink = Color(0xFF000000)
 
 /**
  * Home: a hero card for what is playing, a bento grid of colour tiles that open each section,
@@ -58,7 +58,6 @@ fun HomeScreen(
     topPadding: Dp,
     bottomPadding: Dp,
     controller: AuraController,
-    header: @Composable () -> Unit,
     onOpenSection: (Section) -> Unit,
     onOpenPlayer: () -> Unit,
 ) {
@@ -68,7 +67,6 @@ fun HomeScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = topPadding, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        item(key = "header") { header() }
         item(key = "hero") {
             HeroCard(
                 current = current,
@@ -157,8 +155,7 @@ private fun HeroCard(
             .fillMaxWidth()
             .height(214.dp)
             .bounceClick(onClick)
-            .clip(RoundedCornerShape(40.dp))
-            .background(container)
+            .glassFill(RoundedCornerShape(40.dp), container)
     ) {
         // flat decorative rings, like the grooves of a record
         Canvas(Modifier.fillMaxSize()) {
@@ -181,7 +178,7 @@ private fun HeroCard(
                         .fillMaxSize()
                         .offset(x = 8.dp, y = 8.dp)
                         .clip(RoundedCornerShape(34.dp))
-                        .background(Ink)
+                        .background(Color.Black.copy(alpha = 0.35f))
                 )
                 AuraCover(
                     composition = current,
@@ -286,7 +283,7 @@ private fun Bento(
                 title = "Songs",
                 count = songCount.toString(),
                 icon = Section.SONGS.icon,
-                color = AuraColors.orange,
+                color = AuraColors.red,
                 tall = true,
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 onClick = { onOpenSection(Section.SONGS) }
@@ -299,7 +296,8 @@ private fun Bento(
                     title = "Albums",
                     count = albumCount.toString(),
                     icon = Section.ALBUMS.icon,
-                    color = AuraColors.butter,
+                    color = Color.White.copy(alpha = 0.1f),
+                    onColor = Color.White,
                     tall = false,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     onClick = { onOpenSection(Section.ALBUMS) }
@@ -308,7 +306,7 @@ private fun Bento(
                     title = "Artists",
                     count = artistCount.toString(),
                     icon = Section.ARTISTS.icon,
-                    color = AuraColors.mint,
+                    color = AuraColors.white,
                     tall = false,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     onClick = { onOpenSection(Section.ARTISTS) }
@@ -319,7 +317,7 @@ private fun Bento(
             title = "Playlists",
             count = playlistCount.toString(),
             icon = Section.PLAYLISTS.icon,
-            color = AuraColors.cream,
+            color = AuraColors.red,
             tall = false,
             modifier = Modifier.fillMaxWidth().height(96.dp),
             onClick = { onOpenSection(Section.PLAYLISTS) }
@@ -335,25 +333,25 @@ private fun BentoTile(
     color: Color,
     tall: Boolean,
     modifier: Modifier = Modifier,
+    onColor: Color = Ink,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = modifier
             .bounceClick(onClick)
-            .clip(RoundedCornerShape(34.dp))
-            .background(color)
+            .glassFor(RoundedCornerShape(34.dp), color)
             .padding(20.dp)
     ) {
         Column(Modifier.align(Alignment.TopStart)) {
             Text(
                 text = title,
-                color = Ink,
+                color = onColor,
                 fontSize = if (tall) 22.sp else 18.sp,
                 fontWeight = FontWeight.ExtraBold
             )
             Text(
                 text = count,
-                color = Ink.copy(alpha = 0.6f),
+                color = onColor.copy(alpha = 0.6f),
                 fontSize = if (tall) 15.sp else 13.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -361,7 +359,7 @@ private fun BentoTile(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Ink,
+            tint = onColor,
             modifier = Modifier
                 .align(if (tall) Alignment.BottomStart else Alignment.BottomEnd)
                 .size(if (tall) 72.dp else 34.dp)

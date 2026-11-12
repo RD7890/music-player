@@ -104,7 +104,7 @@ fun PlayerScreen(
         modifier = modifier
             .fillMaxSize()
             .offset { IntOffset(0, dragY.value.roundToInt()) }
-            .background(screenTint(accent, 0.24f))
+            .background(AuraColors.bg)
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragEnd = {
@@ -120,12 +120,7 @@ fun PlayerScreen(
                 )
             }
     ) {
-        // flat background tinted with the cover accent
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(screenTint(accent, 0.24f))
-        )
+        AuraBackdrop()
 
         Column(
             modifier = Modifier
@@ -339,8 +334,7 @@ private fun PlayButton(isPlaying: Boolean, accent: Color, onClick: () -> Unit) {
         modifier = Modifier
             .size(88.dp)
             .bounceClick(onClick)
-            .clip(RoundedCornerShape(corner.dp))
-            .background(accent),
+            .glassFill(RoundedCornerShape(corner.dp), accent),
         contentAlignment = Alignment.Center
     ) {
         Crossfade(targetState = isPlaying, animationSpec = tween(200), label = "playIcon") { playing ->
@@ -465,8 +459,7 @@ fun QueueSheet(
         modifier = modifier
             .fillMaxSize()
             .padding(top = 90.dp)
-            .clip(shape)
-            .background(Color(0xFF131316))
+            .glass(shape, base = Color.Black.copy(alpha = 0.72f))
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 16.dp, top = 18.dp, bottom = 8.dp),
@@ -537,12 +530,11 @@ private fun QueueRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(
+            .then(
                 when {
-                    dragging -> Color(0xFF2A2A30)
-                    active -> accent.copy(alpha = 0.2f)
-                    else -> Color.White.copy(alpha = 0.06f)
+                    dragging -> Modifier.glass(shape, base = Color.Black.copy(alpha = 0.5f), strength = 1.6f)
+                    active -> Modifier.glassFill(shape, accent, 0.45f, 0.25f)
+                    else -> Modifier.glass(shape, strength = 0.7f)
                 }
             )
             .clickable(onClick = onClick)
