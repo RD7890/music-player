@@ -6,7 +6,6 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
@@ -41,8 +40,7 @@ import kotlinx.coroutines.launch
 
 /*
  * Glass look. Compose cannot blur what is behind a view, so the glass is built from layers:
- * a translucent white gradient, a bright-to-faint edge highlight, and an animated red/white
- * glow behind everything ([AuraBackdrop]) that gives the glass something to refract.
+ * a translucent white gradient and a bright-to-faint edge highlight, over a flat black screen.
  */
 
 private val GlassEdge = Brush.linearGradient(
@@ -84,30 +82,10 @@ fun Modifier.glassFor(shape: Shape, color: Color): Modifier =
         this.glassFill(shape, color)
     }
 
-/** Black base with slowly drifting red and white glows. Replaces the old flat tinted background. */
+/** Flat black screen background. No gradients, no glow. */
 @Composable
 fun AuraBackdrop(modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "backdrop")
-    val a = transition.animateFloat(
-        0f, 1f, infiniteRepeatable(tween(17000, easing = LinearEasing), RepeatMode.Reverse), label = "a"
-    )
-    val b = transition.animateFloat(
-        0f, 1f, infiniteRepeatable(tween(23000, easing = LinearEasing), RepeatMode.Reverse), label = "b"
-    )
-    Canvas(modifier.fillMaxSize().background(AuraColors.bg)) {
-        val w = size.width
-        val h = size.height
-        fun blob(color: Color, cx: Float, cy: Float, r: Float) {
-            drawCircle(
-                brush = Brush.radialGradient(listOf(color, Color.Transparent), center = Offset(cx, cy), radius = r),
-                radius = r,
-                center = Offset(cx, cy)
-            )
-        }
-        blob(AuraColors.red.copy(alpha = 0.50f), w * (0.10f + 0.55f * a.value), h * (0.16f + 0.14f * b.value), w * 0.9f)
-        blob(AuraColors.red.copy(alpha = 0.36f), w * (0.95f - 0.65f * b.value), h * (0.60f + 0.20f * a.value), w)
-        blob(Color.White.copy(alpha = 0.09f), w * (0.25f + 0.5f * b.value), h * (0.95f - 0.25f * a.value), w * 0.7f)
-    }
+    Box(modifier.fillMaxSize().background(AuraColors.bg))
 }
 
 /* ---------- pop-ups: smooth in AND out ---------- */

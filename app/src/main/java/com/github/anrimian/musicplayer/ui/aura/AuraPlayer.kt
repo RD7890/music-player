@@ -341,7 +341,7 @@ private fun PlayButton(isPlaying: Boolean, accent: Color, onClick: () -> Unit) {
             Icon(
                 imageVector = if (playing) AuraIcons.Pause else AuraIcons.Play,
                 contentDescription = if (playing) "Pause" else "Play",
-                tint = Color.Black.copy(alpha = 0.85f),
+                tint = Color.White,
                 modifier = Modifier.size(38.dp)
             )
         }

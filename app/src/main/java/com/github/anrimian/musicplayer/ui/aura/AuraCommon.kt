@@ -59,15 +59,15 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 
 object AuraColors {
-    // fixed palette: red, white and black only. Nothing here changes with the playing song.
-    val red = Color(0xFFFF2541)
+    // black, white, and one blue for accents and icons. Nothing here changes with the playing song.
+    val blue = Color(0xFF0377FC)
     val bg = Color(0xFF000000)
-    val card = Color(0xFF141012)
-    val tile = Color(0xFF241A1D)
+    val card = Color(0xFF111111)
+    val tile = Color(0xFF1C1C1E)
     val text = Color(0xFFFFFFFF)
-    val muted = Color(0xFFA39A9C)
+    val muted = Color(0xFF9A9A9F)
 
-    val brand = red
+    val brand = blue
     val white = Color(0xFFFFFFFF)
     val ink = Color(0xFF000000)
 }
@@ -118,7 +118,7 @@ fun formatTime(ms: Long): String {
 /** Flat tile color used while a cover is missing or loading. Same for every song. */
 fun placeholderColor(id: Long?): Color = AuraColors.tile
 
-/** Screen background: black base with a fixed red tint, flat. Change [amount] to make it more or less red. */
+/** Screen background: black base with a fixed tint. */
 fun screenTint(accent: Color, amount: Float = 0.17f): Color = lerp(AuraColors.bg, accent, amount)
 
 @Composable
@@ -136,7 +136,7 @@ fun AuraCover(
         Icon(
             imageVector = AuraIcons.Songs,
             contentDescription = null,
-            tint = Color.White.copy(alpha = 0.55f),
+            tint = AuraColors.blue.copy(alpha = 0.8f),
             modifier = Modifier.fillMaxSize(iconFraction)
         )
         if (composition != null) {
@@ -217,7 +217,7 @@ fun RoundIconButton(
     size: Dp = 48.dp,
     iconSize: Dp = 22.dp,
     container: Color = Color.White.copy(alpha = 0.08f),
-    tint: Color = Color.White,
+    tint: Color = AuraColors.blue,
     description: String? = null,
 ) {
     Box(

@@ -103,7 +103,7 @@ fun ScreenHeader(
                     .background(accent)
                     .padding(horizontal = 14.dp, vertical = 7.dp)
             ) {
-                Text(chip, color = Color.Black.copy(alpha = 0.85f), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text(chip, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -116,7 +116,7 @@ fun ScreenHeader(
                 .padding(start = 18.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(AuraIcons.Search, null, tint = AuraColors.muted, modifier = Modifier.size(20.dp))
+            Icon(AuraIcons.Search, null, tint = AuraColors.blue, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
             Box(Modifier.weight(1f)) {
                 if (query.isEmpty()) {
@@ -180,7 +180,7 @@ fun HomeHeader(
                 .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(AuraIcons.Search, null, tint = AuraColors.muted, modifier = Modifier.size(20.dp))
+            Icon(AuraIcons.Search, null, tint = AuraColors.blue, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
             Text("Search your music", color = AuraColors.muted, fontSize = 16.sp)
         }
@@ -430,7 +430,7 @@ fun PlaylistList(
                 Box(
                     modifier = Modifier
                         .size(58.dp)
-                        .glassFill(RoundedCornerShape(20.dp), AuraColors.red, 0.75f, 0.45f),
+                        .glassFill(RoundedCornerShape(20.dp), AuraColors.blue, 0.75f, 0.45f),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(AuraIcons.Playlists, null, tint = Color.White, modifier = Modifier.size(26.dp))
@@ -500,7 +500,7 @@ fun DetailHeader(
         Text(text = subtitle, color = AuraColors.muted, fontSize = 13.sp)
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            PillButton("Play", AuraIcons.Play, accent, Color.Black.copy(alpha = 0.85f), onPlay)
+            PillButton("Play", AuraIcons.Play, accent, Color.White, onPlay)
             PillButton("Shuffle", AuraIcons.Shuffle, Color.White.copy(alpha = 0.1f), Color.White, onShuffle)
         }
         Spacer(Modifier.height(10.dp))
@@ -522,7 +522,7 @@ fun PillButton(
             .padding(horizontal = 22.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = content, modifier = Modifier.size(18.dp))
+        Icon(icon, null, tint = if (container.alpha >= 0.2f) content else AuraColors.blue, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Text(label, color = content, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
@@ -534,7 +534,7 @@ fun SongsHero(accent: Color, onPlayAll: () -> Unit, onShuffle: () -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        HeroButton("Shuffle all", AuraIcons.Shuffle, accent, Color.Black.copy(alpha = 0.85f), onShuffle, Modifier.weight(1f))
+        HeroButton("Shuffle all", AuraIcons.Shuffle, accent, Color.White, onShuffle, Modifier.weight(1f))
         HeroButton("Play all", AuraIcons.Play, Color.White.copy(alpha = 0.1f), Color.White, onPlayAll, Modifier.weight(1f))
     }
 }
@@ -556,7 +556,7 @@ private fun HeroButton(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = content, modifier = Modifier.size(20.dp))
+        Icon(icon, null, tint = if (container.alpha >= 0.2f) content else AuraColors.blue, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(10.dp))
         Text(label, color = content, fontSize = 15.sp, fontWeight = FontWeight.Bold)
     }

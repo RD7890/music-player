@@ -177,7 +177,7 @@ fun DialogButton(label: String, color: Color, filled: Boolean, onClick: () -> Un
     ) {
         Text(
             text = label,
-            color = if (filled) Color.Black.copy(alpha = 0.85f) else color,
+            color = if (filled) Color.White else color,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold
         )
@@ -390,11 +390,11 @@ fun PlaylistPickerSheet(
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(AuraIcons.Add, null, tint = Color.Black.copy(alpha = 0.85f), modifier = Modifier.size(22.dp))
+                Icon(AuraIcons.Add, null, tint = Color.White, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(12.dp))
                 Text(
                     "New playlist",
-                    color = Color.Black.copy(alpha = 0.85f),
+                    color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )

@@ -75,7 +75,7 @@ fun AuraApp(
         val currentComposition = current.composition
         val isPlaying = current.isPlaying
 
-        val accent = AuraColors.red
+        val accent = AuraColors.blue
 
         var sectionIndex by rememberSaveable { mutableIntStateOf(0) }
         val section = Section.entries[sectionIndex]
@@ -305,6 +305,7 @@ fun AuraApp(
             // full player
             PlayerReveal(
                 visible = playerOpen && currentComposition != null,
+                keepComposed = currentComposition != null,
                 bottomInset = bottom
             ) {
                 if (currentComposition != null) {
@@ -546,7 +547,7 @@ private fun HomeContent(
                     )
                 }
                 if (target == Section.PLAYLISTS) {
-                    PillButton("New playlist", AuraIcons.Add, accent, Color.Black.copy(alpha = 0.85f), onNewPlaylist)
+                    PillButton("New playlist", AuraIcons.Add, accent, Color.White, onNewPlaylist)
                 }
             }
         }

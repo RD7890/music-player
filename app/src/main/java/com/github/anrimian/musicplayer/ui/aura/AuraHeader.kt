@@ -1,15 +1,14 @@
 package com.github.anrimian.musicplayer.ui.aura
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,34 +27,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 /** Height of the floating header pill. Lists use [HEADER_HEIGHT] to keep their first row clear of it. */
 val HEADER_HEIGHT = 64.dp
 
 /**
- * Fixed floating pill at the top of the screen, the same shape language as the [MiniPlayer]
- * at the bottom: round icon on the left, title + subtitle, round red button on the right.
+ * Fixed floating glass pill at the top of the screen, same shape language as the [MiniPlayer].
  *
- * - [onLeading] null: the left circle shows [icon] (section icon).
- * - [onLeading] set: the left circle becomes a back button.
+ * - [onBack] null: the left icon shows [icon] (section icon). Set: it becomes a back arrow.
  * - [onSearch] set: the right button jumps somewhere else (used by Home).
- * - [onQuery] set: the right button turns the pill into an inline search field.
- * - neither: no right button.
+ * - [onQuery] set: the right button slides the title out and an inline search field in.
+ *
+ * The title and the search field are both always composed and cross-slide with one animated
+ * value drawn in a graphics layer, so opening search never re-lays out or recomposes the pill.
  */
 @Composable
 fun FloatingHeader(
@@ -74,147 +71,153 @@ fun FloatingHeader(
 ) {
     var searchOpen by remember(resetKey) { mutableStateOf(query.isNotEmpty()) }
     val focus = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val canSearch = onQuery != null
+
+    val searchP by animateFloatAsState(
+        targetValue = if (searchOpen && canSearch) 1f else 0f,
+        animationSpec = tween(260, easing = FastOutSlowInEasing),
+        label = "headerSearch"
+    )
 
     LaunchedEffect(focusRequest, resetKey) {
-        if (focusRequest && onQuery != null) {
+        if (focusRequest && canSearch) {
             searchOpen = true
             onFocusHandled()
         }
     }
     LaunchedEffect(searchOpen) {
-        if (searchOpen) {
+        if (searchOpen && canSearch) {
+            delay(120) // let the slide start before the keyboard asks for layout
             try {
                 focus.requestFocus()
             } catch (ignored: Exception) {
             }
+        } else {
+            focusManager.clearFocus()
         }
     }
 
-    val shape = RoundedCornerShape(32.dp)
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(HEADER_HEIGHT)
-            .glass(shape, base = Color.Black.copy(alpha = 0.55f))
+            .glass(RoundedCornerShape(32.dp), base = Color.Black.copy(alpha = 0.55f))
             .padding(start = 8.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RingBadge(icon = icon, onClick = onBack)
-        Spacer(Modifier.width(12.dp))
+        val lead = Modifier.size(48.dp)
+        Box(
+            modifier = if (onBack != null) lead.bounceClick(onBack) else lead,
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (onBack != null) AuraIcons.Back else icon,
+                contentDescription = if (onBack != null) "Back" else null,
+                tint = AuraColors.blue,
+                modifier = Modifier.size(26.dp)
+            )
+        }
+        Spacer(Modifier.width(8.dp))
 
-        Crossfade(
-            targetState = searchOpen && onQuery != null,
-            animationSpec = tween(160),
-            modifier = Modifier.weight(1f),
-            label = "headerBody"
-        ) { searching ->
-            if (searching && onQuery != null) {
-                Box(Modifier.fillMaxWidth().height(HEADER_HEIGHT), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.weight(1f).height(HEADER_HEIGHT)) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        alpha = 1f - searchP
+                        translationX = -28.dp.toPx() * searchP
+                    },
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = title,
+                    color = Color.White,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (subtitle.isNotEmpty()) {
+                    Text(
+                        text = subtitle,
+                        color = AuraColors.muted,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            if (onQuery != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            alpha = searchP
+                            translationX = 28.dp.toPx() * (1f - searchP)
+                        }
+                ) {
                     if (query.isEmpty()) {
-                        Text(placeholder, color = AuraColors.muted, fontSize = 16.sp, maxLines = 1)
+                        Text(
+                            placeholder,
+                            color = AuraColors.muted,
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        )
                     }
                     BasicTextField(
                         value = query,
                         onValueChange = onQuery,
+                        enabled = searchOpen,
                         singleLine = true,
                         textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                        cursorBrush = SolidColor(AuraColors.red),
-                        modifier = Modifier.fillMaxWidth().focusRequester(focus)
+                        cursorBrush = SolidColor(AuraColors.blue),
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .fillMaxWidth()
+                            .focusRequester(focus)
                     )
-                }
-            } else {
-                Column(Modifier.fillMaxWidth(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
-                    Text(
-                        text = title,
-                        color = Color.White,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (subtitle.isNotEmpty()) {
-                        Text(
-                            text = subtitle,
-                            color = AuraColors.muted,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                 }
             }
         }
 
-        when {
-            onQuery != null -> {
-                Spacer(Modifier.width(8.dp))
+        if (onQuery != null) {
+            Spacer(Modifier.width(8.dp))
+            HeaderAction(open = searchOpen) {
                 if (searchOpen) {
-                    RoundIconButton(
-                        icon = AuraIcons.Close,
-                        onClick = {
-                            onQuery("")
-                            searchOpen = false
-                        },
-                        size = 48.dp,
-                        iconSize = 22.dp,
-                        container = AuraColors.red,
-                        tint = Color.Black.copy(alpha = 0.85f),
-                        description = "Close search"
-                    )
+                    onQuery("")
+                    searchOpen = false
                 } else {
-                    RoundIconButton(
-                        icon = AuraIcons.Search,
-                        onClick = { searchOpen = true },
-                        size = 48.dp,
-                        iconSize = 22.dp,
-                        container = AuraColors.red,
-                        tint = Color.Black.copy(alpha = 0.85f),
-                        description = "Search"
-                    )
+                    searchOpen = true
                 }
             }
-
-            onSearch != null -> {
-                Spacer(Modifier.width(8.dp))
-                RoundIconButton(
-                    icon = AuraIcons.Search,
-                    onClick = onSearch,
-                    size = 48.dp,
-                    iconSize = 22.dp,
-                    container = AuraColors.red,
-                    tint = Color.Black.copy(alpha = 0.85f),
-                    description = "Search"
-                )
-            }
+        } else if (onSearch != null) {
+            Spacer(Modifier.width(8.dp))
+            HeaderAction(open = false, onClick = onSearch)
         }
     }
 }
 
-/** Left circle: red ring (like the mini player's progress ring) around a section icon or back arrow. */
+/** Round blue button: magnifier, or a cross while the search field is open. */
 @Composable
-private fun RingBadge(icon: ImageVector, onClick: (() -> Unit)?) {
-    val base = Modifier.size(48.dp)
+private fun HeaderAction(open: Boolean, onClick: () -> Unit) {
     Box(
-        modifier = if (onClick != null) base.bounceClick(onClick).clip(CircleShape) else base,
+        modifier = Modifier
+            .size(48.dp)
+            .bounceClick(onClick)
+            .glassFill(CircleShape, AuraColors.blue),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val stroke = 3.dp.toPx()
-            drawArc(
-                color = AuraColors.red,
-                startAngle = 0f,
-                sweepAngle = 360f,
-                useCenter = false,
-                topLeft = Offset(stroke / 2, stroke / 2),
-                size = Size(size.width - stroke, size.height - stroke),
-                style = Stroke(width = stroke)
+        Crossfade(targetState = open, animationSpec = tween(200), label = "headerActionIcon") { isOpen ->
+            Icon(
+                imageVector = if (isOpen) AuraIcons.Close else AuraIcons.Search,
+                contentDescription = if (isOpen) "Close search" else "Search",
+                tint = Color.White,
+                modifier = Modifier.size(22.dp)
             )
         }
-        Icon(
-            imageVector = if (onClick != null) AuraIcons.Back else icon,
-            contentDescription = if (onClick != null) "Back" else null,
-            tint = Color.White,
-            modifier = Modifier.size(22.dp)
-        )
     }
 }

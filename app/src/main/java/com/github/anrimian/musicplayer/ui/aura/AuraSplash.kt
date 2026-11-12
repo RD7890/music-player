@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.hypot
 
 private val SplashDark = Color(0xFF000000)
-private val SplashBg = Color(0xFFFF2541)
+private val SplashBg = Color(0xFF0377FC)
 private val SplashDisc = Color(0xFF000000)
 private val SplashGroove = Color(0xFF2E2E2E)
 private val SplashLabel = Color(0xFFFFFFFF)

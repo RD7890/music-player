@@ -192,11 +192,11 @@ private fun HeroCard(
                     .padding(start = 24.dp, end = 168.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    EqBars(active = isPlaying, color = Ink)
+                    EqBars(active = isPlaying, color = Color.White)
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = if (isPlaying) "NOW PLAYING" else "PAUSED",
-                        color = Ink.copy(alpha = 0.65f),
+                        color = Color.White.copy(alpha = 0.65f),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp
@@ -205,7 +205,7 @@ private fun HeroCard(
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = current.title,
-                    color = Ink,
+                    color = Color.White,
                     fontSize = 22.sp,
                     lineHeight = 24.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -214,7 +214,7 @@ private fun HeroCard(
                 )
                 Text(
                     text = current.artist.orEmpty().ifBlank { "Unknown artist" },
-                    color = Ink.copy(alpha = 0.65f),
+                    color = Color.White.copy(alpha = 0.65f),
                     fontSize = 13.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -225,7 +225,7 @@ private fun HeroCard(
                         .size(52.dp)
                         .bounceClick(onPlayPause)
                         .clip(CircleShape)
-                        .background(Ink),
+                        .background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -245,7 +245,7 @@ private fun HeroCard(
             ) {
                 Text(
                     text = "START LISTENING",
-                    color = Ink.copy(alpha = 0.6f),
+                    color = Color.White.copy(alpha = 0.6f),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.5.sp
@@ -253,13 +253,13 @@ private fun HeroCard(
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = "Shuffle your whole library",
-                    color = Ink,
+                    color = Color.White,
                     fontSize = 26.sp,
                     lineHeight = 28.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
                 Spacer(Modifier.height(16.dp))
-                PillButton("Shuffle all", AuraIcons.Shuffle, Ink, container, onShuffle)
+                PillButton("Shuffle all", AuraIcons.Shuffle, Color.White, container, onShuffle)
             }
         }
     }
@@ -283,7 +283,7 @@ private fun Bento(
                 title = "Songs",
                 count = songCount.toString(),
                 icon = Section.SONGS.icon,
-                color = AuraColors.red,
+                color = Color.White,
                 tall = true,
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 onClick = { onOpenSection(Section.SONGS) }
@@ -306,7 +306,8 @@ private fun Bento(
                     title = "Artists",
                     count = artistCount.toString(),
                     icon = Section.ARTISTS.icon,
-                    color = AuraColors.white,
+                    color = Color.White.copy(alpha = 0.1f),
+                    onColor = Color.White,
                     tall = false,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     onClick = { onOpenSection(Section.ARTISTS) }
@@ -317,7 +318,8 @@ private fun Bento(
             title = "Playlists",
             count = playlistCount.toString(),
             icon = Section.PLAYLISTS.icon,
-            color = AuraColors.red,
+            color = Color.White.copy(alpha = 0.1f),
+            onColor = Color.White,
             tall = false,
             modifier = Modifier.fillMaxWidth().height(96.dp),
             onClick = { onOpenSection(Section.PLAYLISTS) }
@@ -359,7 +361,7 @@ private fun BentoTile(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = onColor,
+            tint = AuraColors.blue,
             modifier = Modifier
                 .align(if (tall) Alignment.BottomStart else Alignment.BottomEnd)
                 .size(if (tall) 72.dp else 34.dp)
