@@ -51,7 +51,7 @@ import com.github.anrimian.musicplayer.domain.models.playlist.Playlist
 
 private val SheetBase = Color(0xD9060304)
 private val SheetShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
-private val DangerColor = Color(0xFFFF6B6B)
+private val DangerColor = Color.White
 
 class ActionItem(
     val icon: ImageVector,
@@ -177,7 +177,7 @@ fun DialogButton(label: String, color: Color, filled: Boolean, onClick: () -> Un
     ) {
         Text(
             text = label,
-            color = if (filled) Color.White else color,
+            color = if (filled) Color.Black else color,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold
         )
@@ -390,11 +390,11 @@ fun PlaylistPickerSheet(
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(AuraIcons.Add, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                Icon(AuraIcons.Add, null, tint = Color.Black, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(12.dp))
                 Text(
                     "New playlist",
-                    color = Color.White,
+                    color = Color.Black,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )

@@ -114,7 +114,7 @@ fun FloatingHeader(
             Icon(
                 imageVector = if (onBack != null) AuraIcons.Back else icon,
                 contentDescription = if (onBack != null) "Back" else null,
-                tint = AuraColors.blue,
+                tint = AuraColors.accent,
                 modifier = Modifier.size(26.dp)
             )
         }
@@ -174,7 +174,7 @@ fun FloatingHeader(
                         enabled = searchOpen,
                         singleLine = true,
                         textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                        cursorBrush = SolidColor(AuraColors.blue),
+                        cursorBrush = SolidColor(AuraColors.accent),
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .fillMaxWidth()
@@ -208,14 +208,14 @@ private fun HeaderAction(open: Boolean, onClick: () -> Unit) {
         modifier = Modifier
             .size(48.dp)
             .bounceClick(onClick)
-            .glassFill(CircleShape, AuraColors.blue),
+            .glassFill(CircleShape, AuraColors.accent),
         contentAlignment = Alignment.Center
     ) {
         Crossfade(targetState = open, animationSpec = tween(200), label = "headerActionIcon") { isOpen ->
             Icon(
                 imageVector = if (isOpen) AuraIcons.Close else AuraIcons.Search,
                 contentDescription = if (isOpen) "Close search" else "Search",
-                tint = Color.White,
+                tint = Color.Black,
                 modifier = Modifier.size(22.dp)
             )
         }

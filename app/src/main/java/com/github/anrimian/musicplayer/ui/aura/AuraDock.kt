@@ -160,7 +160,7 @@ fun MiniPlayer(
                 Icon(
                     imageVector = if (playing) AuraIcons.Pause else AuraIcons.Play,
                     contentDescription = if (playing) "Pause" else "Play",
-                    tint = Color.White,
+                    tint = Color.Black,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -208,7 +208,7 @@ fun OrbNav(
                 Icon(
                     imageVector = if (isOpen) AuraIcons.Close else section.icon,
                     contentDescription = "Navigation",
-                    tint = Color.White,
+                    tint = Color.Black,
                     modifier = Modifier
                         .size(30.dp)
                         .graphicsLayer { rotationZ = -glow * 90f }
@@ -296,7 +296,7 @@ private fun FanItem(
             size = 50.dp,
             iconSize = 24.dp,
             container = if (selected) accent else Color.White.copy(alpha = 0.1f),
-            tint = if (selected) Color.White else AuraColors.blue,
+            tint = if (selected) Color.Black else AuraColors.accent,
             description = item.title
         )
         Spacer(Modifier.height(4.dp))

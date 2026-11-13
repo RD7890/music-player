@@ -30,6 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -40,7 +43,7 @@ import kotlinx.coroutines.launch
 
 /*
  * Glass look. Compose cannot blur what is behind a view, so the glass is built from layers:
- * a translucent white gradient and a bright-to-faint edge highlight, over a flat black screen.
+ * a translucent white gradient and a bright-to-faint edge highlight, over a dotted black screen.
  */
 
 private val GlassEdge = Brush.linearGradient(
@@ -82,10 +85,35 @@ fun Modifier.glassFor(shape: Shape, color: Color): Modifier =
         this.glassFill(shape, color)
     }
 
-/** Flat black screen background. No gradients, no glow. */
+/**
+ * Static screen background: near-black with a fine dot grid. No gradients, no animation, so it
+ * costs nothing while scrolling, and the glass panels have a texture to sit on.
+ */
 @Composable
 fun AuraBackdrop(modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize().background(AuraColors.bg))
+    Box(
+        modifier
+            .fillMaxSize()
+            .background(AuraColors.bg)
+            .drawWithCache {
+                val step = 24.dp.toPx()
+                val cols = (size.width / step).toInt() + 1
+                val rows = (size.height / step).toInt() + 1
+                val points = ArrayList<Offset>(cols * rows)
+                for (r in 0 until rows) {
+                    // every other row is shifted half a step, so the grid reads as a soft diamond lattice
+                    val shift = if (r % 2 == 0) 0f else step / 2f
+                    for (c in 0 until cols) {
+                        points.add(Offset(c * step + shift, r * step))
+                    }
+                }
+                val dot = Color.White.copy(alpha = 0.10f)
+                val width = 1.6.dp.toPx()
+                onDrawBehind {
+                    drawPoints(points, PointMode.Points, dot, width, StrokeCap.Round)
+                }
+            }
+    )
 }
 
 /* ---------- pop-ups: smooth in AND out ---------- */

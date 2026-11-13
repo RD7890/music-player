@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.hypot
 
 private val SplashDark = Color(0xFF000000)
-private val SplashBg = Color(0xFF0377FC)
+private val SplashBg = Color(0xFFFFFFFF)
 private val SplashDisc = Color(0xFF000000)
 private val SplashGroove = Color(0xFF2E2E2E)
 private val SplashLabel = Color(0xFFFFFFFF)
@@ -105,7 +105,7 @@ fun AuraSplash(onFinished: () -> Unit) {
                     )
                 }
                 drawCircle(SplashLabel, r * 0.35f, c)
-                drawCircle(SplashBg, r * 0.09f, c)
+                drawCircle(SplashDisc, r * 0.09f, c)
             }
 
             // the reveal: a transparent circle growing from the record label

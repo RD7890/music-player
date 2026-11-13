@@ -75,7 +75,7 @@ fun AuraApp(
         val currentComposition = current.composition
         val isPlaying = current.isPlaying
 
-        val accent = AuraColors.blue
+        val accent = AuraColors.accent
 
         var sectionIndex by rememberSaveable { mutableIntStateOf(0) }
         val section = Section.entries[sectionIndex]
@@ -547,7 +547,7 @@ private fun HomeContent(
                     )
                 }
                 if (target == Section.PLAYLISTS) {
-                    PillButton("New playlist", AuraIcons.Add, accent, Color.White, onNewPlaylist)
+                    PillButton("New playlist", AuraIcons.Add, accent, Color.Black, onNewPlaylist)
                 }
             }
         }

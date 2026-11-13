@@ -192,11 +192,11 @@ private fun HeroCard(
                     .padding(start = 24.dp, end = 168.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    EqBars(active = isPlaying, color = Color.White)
+                    EqBars(active = isPlaying, color = Color.Black)
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = if (isPlaying) "NOW PLAYING" else "PAUSED",
-                        color = Color.White.copy(alpha = 0.65f),
+                        color = Color.Black.copy(alpha = 0.65f),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp
@@ -205,7 +205,7 @@ private fun HeroCard(
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = current.title,
-                    color = Color.White,
+                    color = Color.Black,
                     fontSize = 22.sp,
                     lineHeight = 24.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -214,7 +214,7 @@ private fun HeroCard(
                 )
                 Text(
                     text = current.artist.orEmpty().ifBlank { "Unknown artist" },
-                    color = Color.White.copy(alpha = 0.65f),
+                    color = Color.Black.copy(alpha = 0.65f),
                     fontSize = 13.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -225,7 +225,7 @@ private fun HeroCard(
                         .size(52.dp)
                         .bounceClick(onPlayPause)
                         .clip(CircleShape)
-                        .background(Color.White),
+                        .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -245,7 +245,7 @@ private fun HeroCard(
             ) {
                 Text(
                     text = "START LISTENING",
-                    color = Color.White.copy(alpha = 0.6f),
+                    color = Color.Black.copy(alpha = 0.6f),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.5.sp
@@ -253,13 +253,13 @@ private fun HeroCard(
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = "Shuffle your whole library",
-                    color = Color.White,
+                    color = Color.Black,
                     fontSize = 26.sp,
                     lineHeight = 28.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
                 Spacer(Modifier.height(16.dp))
-                PillButton("Shuffle all", AuraIcons.Shuffle, Color.White, container, onShuffle)
+                PillButton("Shuffle all", AuraIcons.Shuffle, Color.Black, container, onShuffle)
             }
         }
     }
@@ -361,7 +361,7 @@ private fun BentoTile(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = AuraColors.blue,
+            tint = onColor,
             modifier = Modifier
                 .align(if (tall) Alignment.BottomStart else Alignment.BottomEnd)
                 .size(if (tall) 72.dp else 34.dp)
