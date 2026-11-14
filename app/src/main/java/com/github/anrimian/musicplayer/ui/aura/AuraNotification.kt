@@ -4,6 +4,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
@@ -61,7 +63,7 @@ object AuraNotification {
         token: MediaSessionCompat.Token? = null,
     ): NotificationCompat.Builder {
         val density = context.resources.displayMetrics.density
-        val cover = state.cover?.let { softwareCopy(it) }
+        val cover = state.cover?.let { toMono(softwareCopy(it)) }
 
         val collapsed = RemoteViews(context.packageName, R.layout.aura_notification_collapsed)
         bindCard(collapsed, context, state, cover, density, heightDp = 48, artDp = 40, artRadiusDp = 10)
@@ -91,11 +93,27 @@ object AuraNotification {
             .setCustomContentView(collapsed)
             .setCustomBigContentView(expanded)
             .setLargeIcon(cover)
-            .setColorized(false)
+            .setColor(0xFF050505.toInt())
+            .setColorized(true)
             .setShowWhen(false)
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+    }
+
+
+    /**
+     * Black and white cover. Android builds the notification / lock screen / media-controls colors
+     * from the cover, so a colored cover gives a brown or orange card. A gray cover gives a gray
+     * palette. Use this bitmap for the large icon AND for MediaMetadataCompat ALBUM_ART / ART too.
+     */
+    fun toMono(src: Bitmap): Bitmap {
+        val bitmap = softwareCopy(src)
+        val out = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+        val matrix = ColorMatrix().apply { setSaturation(0f) }
+        val paint = Paint(Paint.FILTER_BITMAP_FLAG).apply { colorFilter = ColorMatrixColorFilter(matrix) }
+        Canvas(out).drawBitmap(bitmap, 0f, 0f, paint)
+        return out
     }
 
     // ---------------------------------------------------------------- views
