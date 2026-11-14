@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown in the notification when a track has no cover. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <path
+        android:fillColor="#FF1C1C1E"
+        android:pathData="M20,0H76A20,20 0,0 1,96,20V76A20,20 0,0 1,76,96H20A20,20 0,0 1,0,76V20A20,20 0,0 1,20,0Z" />
+    <path
+        android:pathData="M28,48a20,20 0,1 1,40 0a20,20 0,1 1,-40 0"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.5" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M40.4,48a7.6,7.6 0,1 1,15.2 0a7.6,7.6 0,1 1,-15.2 0" />
+</vector>

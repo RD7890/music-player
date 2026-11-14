@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aura_n_previous">Previous</string>
+    <string name="aura_n_play">Play</string>
+    <string name="aura_n_pause">Pause</string>
+    <string name="aura_n_next">Next</string>
+    <string name="aura_n_close">Close</string>
+</resources>
